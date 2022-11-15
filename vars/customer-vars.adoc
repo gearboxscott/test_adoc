@@ -1,0 +1,25 @@
+// --------------------------------
+// Document Information
+// The customer-vars.adoc is meant for customer specific information such as the name,
+// short name, and gss information
+// --------------------------------
+
+:description: Ansible Phase I
+
+// This is where the customer name, customer, and short-name cust are inserted
+:customer: Reyes Holdings, L.L.C.
+:cust: Reyes
+
+// add name of customer logo here (store in images directory)
+// Leave it "empty" WITHOUT QUOTES if not there.
+:customerlogo: Reyes_Holdings_Logo.png
+
+:custprojectmanager: Dianna Brown
+
+// these are required for the support chapter.
+:custgss: Reyes Holdings,L.L.C.
+:nogss: 1558218
+
+// --------------------------------
+// Other Vars
+// --------------------------------

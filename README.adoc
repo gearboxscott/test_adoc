@@ -6,18 +6,21 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-[NOTE]
-====
-A sample note admonition.
-We can use gemoji icons in the Asciidoctor markup.
-We assign an icon name to the document
-attributes `tip-caption`, `note-caption` and `important-caption`.
-====
+include::vars/render-vars.adoc[]
+include::vars/document-vars.adoc[]
+include::vars/redhat-vars.adoc[]
+include::vars/customer-vars.adoc[]
+include::content/000_vars.adoc[]
+include::locale/attributes.adoc[]
 
-TIP: It works!
+// Adding logo to the coverpage.
+// Change the pdfwidth to improve embedding
+ifeval::["{customerlogo}" != "empty"]
+:title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
+endif::[]
 
-IMPORTANT: Asciidoctor is awesome, don't forget!
+= Ansible Base Image Template Build Using AAP and Packer
+:description: This document will describe how to use Ansible to call Packer to build a base image, then Packer will call Ansible to setup the rest of the image before converting it to a template.
+:page-layout: book
 
-CAUTION: Don't forget to add the `...-caption` document attributes in the header of the document on GitHub.
-
-WARNING: You have no reason not to use Asciidoctor.
+= {subject}: {customer} - {description}
