@@ -10,7 +10,7 @@ include::vars/render-vars.adoc[]
 include::vars/document-vars.adoc[]
 include::vars/redhat-vars.adoc[]
 include::vars/customer-vars.adoc[]
-include::content/000_vars.adoc[]
+// include::content/000_vars.adoc[]
 include::locale/attributes.adoc[]
 
 // Adding logo to the coverpage.
@@ -19,8 +19,275 @@ ifeval::["{customerlogo}" != "empty"]
 :title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
 endif::[]
 
-= Ansible Base Image Template Build Using AAP and Packer
-:description: This document will describe how to use Ansible to call Packer to build a base image, then Packer will call Ansible to setup the rest of the image before converting it to a template.
-:page-layout: book
+= {subject}
 
-= {subject}: {customer} - {description}
+{customer}
+
+{description}
+
+<<<
+toc::[]
+
+
+== The Story
+
+A task was presented to create a hardened base image for various cloud virtualization platforms using Ansible, Ansible Automation Platform and Packer.
+
+Packer is predisposition to use OS isos to build servers with either kickstart configuration files for Linux based servers and auto unattended files for Windows based servers. Kickstart and Auto Unattended files can do a lot things during the initialization like add and remove packages, create users, partition disk, etc. It does have it's limitations. After those files are done, they cannot be used again without rebuilding the entire images.
+
+Using Ansible can help here to finish out the build and allow the configuration files to remain in their simpliest state. Ansible can harden the image and coded to with roles that can use on the image and after it been deployed to keep the hardening in place. It can be variablized to allow change that need to happen over time to made easily. Having reusability is one of strengths.
+
+This section will show how Packer will build the initial image, then it will reach out to Ansible Automation Platform to finish up the initial image to install and remove packages, setup and disable users, permissions and fortifications so the image at rest is already hardened before it's deployed in the cloud environment.
+
+The other part of this story is the Packer and Automation workflow is able to produce hardened base images for all types of cloud platforms like VMware, Azure, Amazon and Oracle Cloud.
+
+== Process Flow
+
+##TODO##  Insert process flow diagram here.
+
+
+== Requirements
+
+The following is a list of requirements that makes this process work:
+
+* A custom execution environment will be required that has Packer installed. The details are in the `Ansible Custom Execution Environment` section below.
+*
+
+== Components
+
+== Ansible Custom Execution Environment
+
+The following are files that were used to create the custom execution environment:
+
+The `ansible.cfg` will allow the ansible builder to have access to the Private Automation to pull down collections, etc.
+
+.ansible.cfg
+[source,yaml,source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+[defaults]
+collections_paths=collections
+roles_path=roles/
+module_utils=plugins/module_utils
+library=plugins/modules
+lookup_plugins=plugins/lookup/
+vault_password_file = ../.ansible-vault
+stdout_callback = yaml
+
+[galaxy]
+server_list = rh-certified_repo, community_repo, published_repo
+
+[galaxy_server.rh-certified_repo]
+url=https://sdatmhub.reyesholdings.com/api/galaxy/content/rh-certified/
+token=<redacted>
+
+[galaxy_server.community_repo]
+url=https://sdatmhub.reyesholdings.com/api/galaxy/content/community/
+token=<redacted>
+
+[galaxy_server.published_repo]
+url=https://sdatmhub.reyesholdings.com/api/galaxy/content/published/
+token=<redacted>
+----
+
+.requirements.yml
+[source,yaml,source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+---
+# Navigate to https://console.redhat.com/ansible/automation-hub for certified content
+# Complete list of certified collections: https://access.redhat.com/articles/3642632
+
+collections:
+  - name: ansible.controller
+  - name: ansible.netcommon
+  - name: ansible.network
+  - name: ansible.posix
+  - name: ansible.security
+  - name: ansible.utils
+  - name: ansible.windows
+  - name: ansible.yang
+  - name: awx.awx
+  - name: azure.azcollection
+  - name: community.general
+  - name: community.hashi_vault
+  - name: community.vmware
+  - name: community.windows
+  - name: redhat.insights
+  - name: redhat.rhel_system_roles
+  - name: servicenow.itsm
+  - name: vmware.vmware_rest
+----
+
+.requirements.txt
+[source,ini,source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+# Python Dependencies for Ansible Collections
+# Only declare dependencies here for modules not already listed in the `requirements.txt`
+# that resides within the collection repository. For example:
+# Azure Collection python dependencies [requirements.txt]
+# https://github.com/ansible-collections/azure/blob/v1.12.0/requirements-azure.txt
+
+# Python Dependencies for Ansible Modules/Roles
+# <list them here>
+
+# Other Dependencies
+# <list them here>
+pip
+setuptools
+pycdlib
+
+# Windows connectivity requirements - https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html#what-is-winrm
+pywinrm\>=0.3.0
+# CIS Windows requirements - https://github.com/ansible-lockdown/Windows-2019-CIS
+passlib
+lxml
+xmltodict
+jmespath
+# Infoblox requirements - https://docs.ansible.com/ansible/latest/scenario_guides/guide_infoblox.html#prerequisites
+infoblox-client
+# Mongo requirements
+pymongo
+# Ansible `replace` module requirements - https://docs.ansible.com/ansible/latest/collections/ansible/builtin/replace_module.html
+selinux
+# VMware vSphere requirements - https://github.com/vmware/pyvmomi
+pyVmomi
+# VMware vCenter dynamic inventory requirements - https://github.com/vmware/vsphere-automation-sdk-python
+suds-jurko
+git+https://github.com/vmware/vsphere-automation-sdk-python.git
+# File required for Azure Collection
+packaging
+requests[security]
+xmltodict
+azure-cli-core==2.34.0
+azure-common==1.1.11
+azure-identity==1.7.0
+azure-mgmt-apimanagement==0.2.0
+azure-mgmt-authorization==2.0.0
+azure-mgmt-batch==5.0.1
+azure-mgmt-cdn==11.0.0
+azure-mgmt-compute==26.1.0
+azure-mgmt-containerinstance==9.0.0
+azure-mgmt-core==1.3.0
+azure-mgmt-containerregistry==9.1.0
+azure-containerregistry==1.0.0
+azure-mgmt-containerservice==20.0.0
+azure-mgmt-datalake-store==1.0.0
+azure-mgmt-datafactory==2.0.0
+azure-mgmt-dns==8.0.0
+azure-mgmt-marketplaceordering==0.1.0
+azure-mgmt-monitor==3.0.0
+azure-mgmt-managedservices==6.0.0
+azure-mgmt-managementgroups==0.2.0
+azure-mgmt-network==19.1.0
+azure-mgmt-nspkg==2.0.0
+azure-mgmt-privatedns==1.0.0
+azure-mgmt-redis==13.0.0
+azure-mgmt-resource==10.2.0
+azure-mgmt-rdbms==10.0.0
+azure-mgmt-search==8.0.0
+azure-mgmt-servicebus==7.1.0
+azure-mgmt-sql==3.0.1
+azure-mgmt-storage==19.0.0
+azure-mgmt-trafficmanager==1.0.0b1
+azure-mgmt-web==6.1.0
+azure-nspkg==2.0.0
+azure-storage-blob==12.11.0
+msrest==0.7.1
+msrestazure==0.6.4
+azure-keyvault==1.1.0
+azure-mgmt-keyvault==10.0.0
+azure-graphrbac==0.61.1
+azure-mgmt-cosmosdb==6.4.0
+azure-mgmt-hdinsight==9.0.0
+azure-mgmt-devtestlabs==3.0.0
+azure-mgmt-loganalytics==12.0.0
+azure-mgmt-automation==1.0.0
+azure-mgmt-iothub==2.2.0
+azure-mgmt-recoveryservices==2.0.0
+azure-mgmt-recoveryservicesbackup==3.0.0
+azure-mgmt-notificationhubs==7.0.0
+azure-mgmt-eventhub==10.1.0
+voluptuous==0.13.1
+pycodestyle==2.8.0
+yamllint==1.26.3
+cryptography==38.0.1
+pylint==2.13.5
+
+# add for spacewalk to work
+libxml2-python3
+----
+
+The `execution-environment.yml` is the main file that tells the Ansible Builder how to build the custom execution environment:
+
+.execution-environment.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+---
+version: 1
+
+build_arg_defaults:
+  # Ignore certificatons (verify_ssl=false)
+  #
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: "-v"
+
+  # Execution Environment Base Image
+  EE_BASE_IMAGE: "sdatmhub.reyesholdings.com/ee-supported-rhel8:latest"
+
+ansible_config: 'ansible.cfg'
+
+dependencies:
+  # Ansible dependencies
+  # Pull down ansible roles and collections required by your playbooks
+  galaxy: requirements.yml
+
+  # Python requirements
+  # Reference ansible collections to know what python packages you need
+  # Only declare python modules that are outside of the `requirements.txt` that
+  # already exists in the collection repo. That requirements.txt will be automatically
+  # picked up and installed within the image.
+  python: requirements.txt
+
+  # System binary depenencies - system packages you want to include into the image
+  # Packages are pulled from ubi repositories https://access.redhat.com/articles/4238681
+  # Examples are zip, dnf, and other tools
+  system: bindep.txt
+
+additional_build_steps:
+  # ANSIBLE-BUILDER PREPEND - START
+  prepend: |
+    RUN whoami
+    RUN cat /etc/os-release
+  # ANSIBLE-BUILDER PREPEND - END
+
+  append:
+  # ANSIBLE-BUILDER APPEND - START
+    - RUN echo This is a post-install command!
+    - RUN dnf install unzip  --assumeyes
+    - RUN dnf install -y yum-utils
+    - RUN yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo --assumeyes
+    - RUN dnf install packer --assumeyes
+    - RUN dnf install sudo --assumeyes
+    - RUN useradd --password redhat1234! pacman
+    - RUN touch /etc/sudoers.d/pacman
+    - RUN echo 'pacman ALL=(ALL) ALL' > /etc/sudoers.d/pacman
+    - RUN chmod 644 /etc/sudoers.d/pacman
+    - RUN dnf install genisoimage --assumeyes
+
+  # ANSIBLE-BUILDER APPEND - END
+
+...
+----
+
+
+== Packer Setup
+
+== Ansible Project and Roles
+
+== Ansible Controller
+
+== Variables
+
+== Play by Play
+
+== How to make changes and updates
+
+== Final Thoughts

@@ -4,7 +4,7 @@
 // short name, and gss information
 // --------------------------------
 
-:description: Ansible Phase I
+:description: This document will describe how to use Ansible to call Packer to build a base image, then Packer will call Ansible to setup the rest of the image before converting it to a template.
 
 // This is where the customer name, customer, and short-name cust are inserted
 :customer: Reyes Holdings, L.L.C.

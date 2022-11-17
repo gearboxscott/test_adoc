@@ -4,7 +4,7 @@
 // It should not contain customer specific variables related to the customer name and related information
 // --------------------------------
 
-:subject: Consulting Engagement Report
+:subject: Ansible Base Image Template Build Using AAP and Packer
 // docstatus - indicates where in the lifecycle CER is (draft, in-progress, final)
 // only 'draft' gets special handling, but remember that the docstatus is printed in every page header.
 :docstatus: draft
