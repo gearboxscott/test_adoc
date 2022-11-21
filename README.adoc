@@ -10,7 +10,6 @@ include::vars/render-vars.adoc[]
 include::vars/document-vars.adoc[]
 include::vars/redhat-vars.adoc[]
 include::vars/customer-vars.adoc[]
-// include::content/000_vars.adoc[]
 include::locale/attributes.adoc[]
 
 // Adding logo to the coverpage.
@@ -26,6 +25,8 @@ endif::[]
 {description}
 
 <<<
+toc:
+toc-placement!:
 toc::[]
 
 
