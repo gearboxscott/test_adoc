@@ -14,9 +14,9 @@ include::locale/attributes.adoc[]
 
 // Adding logo to the coverpage.
 // Change the pdfwidth to improve embedding
-ifeval::["{customerlogo}" != "empty"]
-:title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
-endif::[]
+// ifeval::["{customerlogo}" != "empty"]
+// :title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
+// endif::[]
 
 = {subject}
 
