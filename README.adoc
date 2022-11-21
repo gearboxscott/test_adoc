@@ -25,9 +25,10 @@ endif::[]
 {description}
 
 <<<
-toc:
-toc-placement!:
-toc::[]
+:toc:
+:toc-placement: preamble
+:toclevels: 1
+:showtitle:
 
 
 == The Story
