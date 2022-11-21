@@ -4,14 +4,13 @@ ifdef::env-github[]
 :important-caption: :heavy_exclamation_mark:
 :caution-caption: :fire:
 :warning-caption: :warning:
+endif::[]
 
 include::vars/render-vars.adoc[]
 include::vars/document-vars.adoc[]
 include::vars/redhat-vars.adoc[]
 include::vars/customer-vars.adoc[]
 include::locale/attributes.adoc[]
-
-endif::[]
 
 // Adding logo to the coverpage.
 // Change the pdfwidth to improve embedding
@@ -25,12 +24,7 @@ endif::[]
 
 {description}
 
-<<<
 :toc:
-:toc-placement: preamble
-:toclevels: 1
-:showtitle:
-
 
 == The Story
 
@@ -47,7 +41,6 @@ The other part of this story is the Packer and Automation workflow is able to pr
 == Process Flow
 
 ##TODO##  Insert process flow diagram here.
-
 
 == Requirements
 
