@@ -23,3 +23,7 @@
 // --------------------------------
 // Other Vars
 // --------------------------------
+
+:automation_controller: sdatmctr.reyesholdings.com
+:automation_hub: sdatmhub.reyesholdings.com
+:vault_password_file: vault_password_file = ../.ansible-vault
