@@ -1,0 +1,54 @@
+---
+version: 1
+
+build_arg_defaults:
+  # Ignore certificatons (verify_ssl=false)
+  #
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: "-v"
+
+  # Execution Environment Base Image
+  EE_BASE_IMAGE: "sdatmhub.reyesholdings.com/ee-supported-rhel8:latest"
+
+ansible_config: 'ansible.cfg'
+
+dependencies:
+  # Ansible dependencies
+  # Pull down ansible roles and collections required by your playbooks
+  galaxy: requirements.yml
+
+  # Python requirements
+  # Reference ansible collections to know what python packages you need
+  # Only declare python modules that are outside of the `requirements.txt` that
+  # already exists in the collection repo. That requirements.txt will be automatically
+  # picked up and installed within the image.
+  python: requirements.txt
+
+  # System binary depenencies - system packages you want to include into the image
+  # Packages are pulled from ubi repositories https://access.redhat.com/articles/4238681
+  # Examples are zip, dnf, and other tools
+  system: bindep.txt
+
+additional_build_steps:
+  # ANSIBLE-BUILDER PREPEND - START
+  prepend: |
+    RUN whoami
+    RUN cat /etc/os-release
+  # ANSIBLE-BUILDER PREPEND - END
+
+  append:
+  # ANSIBLE-BUILDER APPEND - START
+    - RUN echo This is a post-install command!
+    - RUN dnf install unzip  --assumeyes
+    - RUN dnf install -y yum-utils
+    - RUN yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo --assumeyes
+    - RUN dnf install packer --assumeyes
+    - RUN dnf install sudo --assumeyes
+    - RUN useradd --password redhat1234! pacman
+    - RUN touch /etc/sudoers.d/pacman
+    - RUN echo 'pacman ALL=(ALL) ALL' > /etc/sudoers.d/pacman
+    - RUN chmod 644 /etc/sudoers.d/pacman
+    - RUN dnf install genisoimage --assumeyes
+
+  # ANSIBLE-BUILDER APPEND - END
+
+...

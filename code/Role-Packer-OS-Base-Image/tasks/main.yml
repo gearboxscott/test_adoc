@@ -1,0 +1,261 @@
+---
+# main.yml - tasks file for Role-Packer-OS-Base-Image
+
+- name: OS-Base-Images - main - Create needed directories
+  ansible.builtin.file:
+    path: "{{ working_dir_path }}"
+    state: directory
+    mode: 0777
+
+- name: OS-Base-Images - main - Insert Controller Job Playbook
+  ansible.builtin.template:
+    src: '{{ controller_job_template_details.source }}'
+    dest: "{{ working_dir_path }}/{{ controller_job_template_details.name }}"
+    mode: '0644'
+
+# LINUX IMAGE BUILD
+- name: OS-Base-Images - main - Prepare for Linux Images
+  when: '"window" not in os_name'
+  block:
+
+    - name: OS-Base-Images - main - Set the Name of the Packer HCL Template
+      ansible.builtin.set_fact:
+        packer_build_template: "{{ packer_os_builds[os_name].packer.pkr_cfg }}"
+
+    - name: OS-Base-Images - main - Insert Kickstart and HCL Templates
+      ansible.builtin.template:
+        src: '{{ os.source }}'
+        dest: "{{ working_dir_path }}/{{ os.destination }}"
+        mode: '0644'
+      loop:
+        - source: "{{ packer_os_builds[os_name].packer.ks_cfg_template }}"
+          destination: "{{ packer_os_builds[os_name].packer.ks_cfg }}"
+        - source: "{{ packer_os_builds[os_name].packer.pkr_cfg_template }}"
+          destination: "{{ packer_os_builds[os_name].packer.pkr_cfg }}"
+      loop_control:
+        loop_var: os
+
+    - name: Render Vars
+      ansible.builtin.set_fact:
+        ks_cfg_output: "{{ lookup( 'ansible.builtin.template', packer_os_builds[os_name].packer.ks_cfg_template ).split('\n') }}"
+        hcl_output: "{{ lookup( 'ansible.builtin.template', packer_os_builds[os_name].packer.pkr_cfg_template ).split('\n') }}"
+
+    - name: Render the KS Config
+      ansible.builtin.debug:
+        var=ks_cfg_output
+
+    - name: Render the Packer Config HCL
+      ansible.builtin.debug:
+        var=hcl_output
+
+# end of block -- OS-Base-Images - main - Prepare for Linux Images
+
+# WINDOWS IMAGE BUILD
+- name: OS-Base-Images - main - Prepare for Windows Images
+  when: '"window" in os_name'
+  block:
+
+    - name: OS-Base-Images - main - Create Sub Directories
+      ansible.builtin.file:
+        path: '{{ execenv }}'
+        state: directory
+        mode: 0777
+      loop:
+        - '{{ packer_os_builds[os_name].execenv_scripts_path }}'
+        - '{{ packer_os_builds[os_name].execenv_answer_files }}'
+      loop_control:
+        loop_var: execenv
+      register: create_directories
+
+    - name: OS-Base-Images - main - Place windows build files on Execution Environment (Pre-Template Part One)
+      ansible.builtin.set_fact:
+        packer_hcl_template_source: |
+          "{{ (vmware_template_information[task_os_name].part|int == 1 ) |
+              ternary(packer_os_builds[os_name].packer.pkr_part1_cfg_template, packer_os_builds[os_name].packer.pkr_part2_cfg_template)
+           }}"
+        packer_hcl_template_destination: |
+          "{{ (vmware_template_information[task_os_name].part|int == 1) |
+              ternary(packer_os_builds[os_name].packer.pkr_part1_cfg, packer_os_builds[os_name].packer.pkr_part2_cfg)
+           }}"
+
+    - name: OS-Base-Images - main - Place windows build files on Execution Environment (Pre-Template Part One)
+      ansible.builtin.template:
+        src: "{{ item.source }}"
+        dest: "{{ item.destination }}"
+        mode: '0644'
+      loop:
+        - source: "{{ packer_hcl_template_source }}"
+          destination: "{{ working_dir_path }}/{{ packer_hcl_template_destination }}"
+        - source: '{{ packer_os_builds[os_name].packer.win_cfg_template }}'
+          destination: '{{ packer_os_builds[os_name].execenv_answer_files }}/{{ packer_os_builds[os_name].packer.win_cfg }}'
+      register: ee_files_out
+
+    - name: OS-Base-Images - main - Place windows script for build on Execution Environment
+      ansible.builtin.template:
+        src: '{{ packer_os_builds[os_name].template_scripts_path }}/{{ item }}.j2'
+        dest: '{{ packer_os_builds[os_name].execenv_scripts_path }}/{{ item }}'
+        mode: '0644'
+      loop: '{{ packer_os_builds[os_name].scripts }}'
+      register: templates_out
+
+    - name: OS-Base-Images - main - Pick Part One or Part Two
+      ansible.builtin.set_fact:
+        packer_build_template: "{{ packer_hcl_template_destination }}"
+
+# End of Block -- OS-Base-Images - main - Prepare for Windows Images
+
+
+# # WINDOWS IMAGE BUILD
+# - name: OS-Base-Images - main - Prepare for Windows Images
+#   when: '"window" in os_name'
+#   block:
+#
+#     - name: OS-Base-Images - main - Create Sub Directories
+#       ansible.builtin.file:
+#         path: '{{ execenv }}'
+#         state: directory
+#         mode: 0777
+#       loop:
+#         - '{{ packer_os_builds[os_name].execenv_scripts_path }}'
+#         - '{{ packer_os_builds[os_name].execenv_answer_files }}'
+#       loop_control:
+#         loop_var: execenv
+#       register: create_directories
+#
+#     - name: OS-Base-Images - main - Place windows build files on Execution Environment (Pre-Template Part One)
+#       ansible.builtin.set_fact:
+#         packer_hcl_template_source: |
+#           "{{ (vmware_template_information[task_os_name].part|int == 1 ) |
+#               ternary(packer_os_builds[os_name].packer.pkr_part1_cfg_template, packer_os_builds[os_name].packer.pkr_part2_cfg_template)
+#            }}"
+#         packer_hcl_template_destination: |
+#           "{{ (vmware_template_information[task_os_name].part|int == 1) |
+#               ternary(packer_os_builds[os_name].packer.pkr_part1_cfg, packer_os_builds[os_name].packer.pkr_part2_cfg)
+#            }}"
+#
+#     - name: OS-Base-Images - main - Place windows build files on Execution Environment (Pre-Template Part One)
+#       ansible.builtin.template:
+#         src: '{{ item.source }}'
+#         dest: '{{ item.destination }}'
+#         mode: '0644'
+#       loop:
+#         - source: "{{ packer_hcl_template_source }}"
+#           destination: "{{ working_dir_path }}/{{ packer_hcl_template_destination }}"
+#         - source: "{{ packer_os_builds[os_name].packer.win_cfg_template }}"
+#           destination: "{{ packer_os_builds[os_name].execenv_answer_files }}/{{ packer_os_builds[os_name].packer.win_cfg }}"
+#       register: ee_files_out
+#
+#     - name: OS-Base-Images - main - Place windows script for build on Execution Environment
+#       ansible.builtin.template:
+#         src: '{{ packer_os_builds[os_name].template_scripts_path }}/{{ item }}.j2'
+#         dest: '{{ packer_os_builds[os_name].execenv_scripts_path }}/{{ item }}'
+#         mode: '0644'
+#       loop: '{{ packer_os_builds[os_name].scripts }}'
+#       register: templates_out
+#
+#     - name: OS-Base-Images - main - Pick Part One or Part Two
+#       ansible.builtin.set_fact:
+#         packer_build_template: "{{ packer_hcl_template_destination }}"
+#
+# # End of Block -- OS-Base-Images - main - Prepare for Windows Images
+
+- name: OS-Base-Images - main - Initialize Packer Template
+  ansible.builtin.shell: |
+    ls -lRa
+  args:
+    chdir: "{{ working_dir_path }}"
+  register: working_dir_path_listing
+
+- name: Show Linting of {{ working_dir_path }}
+  ansible.builtin.debug:
+    var=working_dir_path_listing.stdout_lines
+
+- name: OS-Base-Images - main - Initialize Packer Template
+  ansible.builtin.shell: |
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER INITIALIZATION                                                                  ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    /usr/bin/packer init {{ packer_build_template }}
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER INITIALIZATION OUTPUT                                                           ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    cat packer_initialization_log.txt
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER INITIALIZATION END                                                              ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+  args:
+    chdir: "{{ working_dir_path }}"
+  environment:
+    PACKER_LOG: 1
+    PACKER_LOG_PATH: "packer_initialization_log.txt"
+  register: packer_init_output
+
+- name: Show packer init
+  ansible.builtin.debug:
+    var=packer_init_output.stdout_lines
+
+- name: OS-Base-Images - main - Validate Packer Template
+  ansible.builtin.shell: |
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER VALIDATION                                                                      ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    /usr/bin/packer validate {{ packer_build_template }}
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER VALIDATION OUTPUT                                                               ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    cat packer_validation_log.txt
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER VALIDATION END                                                                  ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+  args:
+    chdir: "{{ working_dir_path }}"
+  environment:
+    PACKER_LOG: 1
+    PACKER_LOG_PATH: "packer_validation_log.txt"
+  register: packer_validate_output
+
+- name: OS-Base-Images - main - show packer validate
+  ansible.builtin.debug:
+    var=packer_validate_output.stdout_lines
+
+- name: OS-Base-Images - main - Create Host Image
+  ansible.builtin.shell: |
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER BUILD                                                                           ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    /usr/bin/packer build -color=false -force {{ packer_build_template }}
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER BUILD RESULT                                                                    ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+    cat packer_build_log.txt
+    echo ""
+    echo "------------------------------------------------------------------------------------------------"
+    echo "---[ PACKER BUILD END                                                                       ]---"
+    echo "------------------------------------------------------------------------------------------------"
+    echo ""
+  args:
+    chdir: "{{ working_dir_path }}"
+  environment:
+    PACKER_LOG: 1
+    PACKER_LOG_PATH: "packer_build_log.txt"
+  register: packer_build_output
+
+- name: OS-Base-Images - main - Show packer build output
+  ansible.builtin.debug:
+    var=packer_build_output.stdout_lines
+
+...

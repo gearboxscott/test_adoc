@@ -1,0 +1,166 @@
+﻿  - name: Base Image OS Templates
+    description: Build Base Image OS Templates for Cloud
+    job_type: run
+    inventory: Packer Build
+    labels:
+      - packer
+    credentials:
+      - AAP Controller Access - Hashicorp
+      - AAP Vault
+      - Blob SAS Token - Hashicorp Vaulted
+      - Console Account - Hashicorp Vaulted
+      - Packer Credential - Hashicorp Vaulted
+      - Qualys Configuration - Hashicorp Vaulted
+      - Red Hat Registration - Hashicorp Vaulted
+      - SpaceWalk Registration - Hashicorp Vaulted
+      - VMware vSphere API Access - Hashicorp Vaulted
+      - Windows Admin Account - Hashicorp Vaulted
+      - Windows Local Admin - Hashicorp Vaulted
+    become_enabled: false
+    playbook: site.yml
+    project: 0_VMware OS Templates Project
+    scm_branch: ''
+    verbosity: 2
+    execution_environment: Reyes Packer Execution Environment
+    schedules: []
+    skip_tags: ''
+    start_at_task: ''
+    timeout: 0
+    use_fact_cache: false
+    webhook_credential: null
+    webhook_service: ''
+    extra_vars:
+      template_build_name: AAP_SCOTT_TEST_RHEL7
+      os_name: rhel7
+      template_build_description: 'RHEL 7x Auto Build - Base Image with Level1 Hardening Round 1 - CIS - v3.0.1 - 09-21-2020 - OnPremise'
+      convert_to_template: true
+      iso_path_storage: 'xLocalDisk-rh-gdc3-bmesx03-D1'
+      iso_path: 'ISO/rhel-server-7.9-x86_64-dvd.iso'
+      packer_vsphere_datacenter: 'Datacenter'
+      packer_vsphere_cluster: 'vCLS-7e85c3b2-4bdd-4cc0-b2ac-37f583ef5708'
+      packer_vsphere_network: 'Sandbox_PG_1460'
+      packer_vsphere_datastore: 'xLocalDisk-rh-gdc3-bmesx03-D1'
+      packer_vsphere_folder: 'templates'
+    survey_enabled: true
+    survey_spec:
+      description: ''
+      name: ''
+      spec:
+      - choices: |
+          OnPrem_RHEL7
+          OnPrem_RHEL8
+          OCI_OEL7
+          OCI_OEL8
+          Azure_RHEL7
+          Azure_RHEL8
+          Windows2019_Updated_Only_Template
+          Windows2019_Completed_Template'
+        default: ''
+        formattedChoices:
+        - choice: OnPrem_RHEL7
+          id: 0
+          isDefault: false
+        - choice: OnPrem_RHEL8
+          id: 1
+          isDefault: false
+        - choice: OCI_OEL7
+          id: 2
+          isDefault: false
+        - choice: OCI_OEL8
+          id: 3
+          isDefault: false
+        - choice: Azure_RHEL7
+          id: 4
+          isDefault: false
+        - choice: Azure_RHEL8
+          id: 5
+          isDefault: false
+        - choice: Windows2019_Updated_Only_Template
+          id: 6
+          isDefault: false
+        - choice: Windows2019_Completed_Template
+          id: 7
+          isDefault: false
+        - choice: Windows2019_Updated_Only_Template
+          id: 8
+          isDefault: false
+        - choice: Windows2019_Completed_Template
+          id: 9
+          isDefault: false
+        max: 1024
+        min: 0
+        new_question: false
+        question_description: Image OS version to build
+        question_name: OS Version
+        required: true
+        type: multiplechoice
+        variable: survey_os_name
+      - choices: sdvcentersandbox01.reyesholdings.com
+        default: sdvcentersandbox01.reyesholdings.com
+        formattedChoices:
+        - choice: sdvcentersandbox01.reyesholdings.com
+          id: 0
+          isDefault: true
+        max: 1024
+        min: 0
+        new_question: false
+        question_description: Name of VMware vSphere Server
+        question_name: vSphere Server Name
+        required: true
+        type: multiplechoice
+        variable: survey_packer_vsphere_server
+      - choices: 'Test_Templates Templates'
+        default: Test_Templates
+        formattedChoices:
+        - choice: Test_Templates
+          id: 0
+          isDefault: true
+        - choice: Templates
+          id: 1
+          isDefault: false
+        max: 1024
+        min: 0
+        new_question: false
+        question_description: Where to place the image template
+        question_name: Template Destination
+        required: true
+        type: multiplechoice
+        variable: survey_packer_vsphere_folder
+      - choices: GDC3-Sandbox
+        default: GDC3-Sandbox
+        formattedChoices:
+        - choice: GDC3-Sandbox
+          id: 0
+          isDefault: true
+        max: 1024
+        min: 0
+        new_question: false
+        question_description: Name of VMware vSphere Datacenter
+        question_name: vSphere Datacenter Name
+        required: true
+        type: multiplechoice
+        variable: survey_packer_vsphere_datacenter
+      - choices: Cluster01
+        default: Cluster01
+        formattedChoices:
+        - choice: Cluster01
+          id: 0
+          isDefault: true
+        max: 1024
+        min: 0
+        new_question: false
+        question_description: Name of VMware vSphere Cluster
+        question_name: vSphere Cluster Name
+        required: true
+        type: multiplechoice
+        variable: survey_packer_vsphere_cluster
+      - choices: xLocalDisk-rh-gdc3-bmesx03-D1
+        default: xLocalDisk-rh-gdc3-bmesx03-D1
+        max: 1024
+        min: 0
+        new_question: true
+        question_description: Name of VMware vSphere Datastore
+        question_name: vSphere Datastore Name
+        required: true
+        type: multiplechoice
+        variable: survey_packer_vsphere_datastore

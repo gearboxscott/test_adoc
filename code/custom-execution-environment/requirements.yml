@@ -1,0 +1,25 @@
+﻿---
+# Navigate to https://console.redhat.com/ansible/automation-hub for certified content
+# Complete list of certified collections: https://access.redhat.com/articles/3642632
+
+collections:
+  - name: ansible.controller
+  - name: ansible.netcommon
+  - name: ansible.network
+  - name: ansible.posix
+  - name: ansible.security
+  - name: ansible.utils
+  - name: ansible.windows
+  - name: ansible.yang
+  - name: awx.awx
+  - name: azure.azcollection
+  - name: community.general
+  - name: community.hashi_vault
+  - name: community.vmware
+  - name: community.windows
+  - name: redhat.insights
+  - name: redhat.rhel_system_roles
+  - name: servicenow.itsm
+  - name: vmware.vmware_rest
+
+  ...

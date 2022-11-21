@@ -1,0 +1,94 @@
+﻿# Python Dependencies for Ansible Collections
+# Only declare dependencies here for modules not already listed in the `requirements.txt`
+# that resides within the collection repository. For example:
+# Azure Collection python dependencies [requirements.txt]
+# https://github.com/ansible-collections/azure/blob/v1.12.0/requirements-azure.txt
+
+# Python Dependencies for Ansible Modules/Roles
+# <list them here>
+
+# Other Dependencies
+# <list them here>
+pip
+setuptools
+pycdlib
+
+# Windows connectivity requirements - https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html#what-is-winrm
+pywinrm\>=0.3.0
+# CIS Windows requirements - https://github.com/ansible-lockdown/Windows-2019-CIS
+passlib
+lxml
+xmltodict
+jmespath
+# Infoblox requirements - https://docs.ansible.com/ansible/latest/scenario_guides/guide_infoblox.html#prerequisites
+infoblox-client
+# Mongo requirements
+pymongo
+# Ansible `replace` module requirements - https://docs.ansible.com/ansible/latest/collections/ansible/builtin/replace_module.html
+selinux
+# VMware vSphere requirements - https://github.com/vmware/pyvmomi
+pyVmomi
+# VMware vCenter dynamic inventory requirements - https://github.com/vmware/vsphere-automation-sdk-python
+suds-jurko
+git+https://github.com/vmware/vsphere-automation-sdk-python.git
+# File required for Azure Collection
+packaging
+requests[security]
+xmltodict
+azure-cli-core==2.34.0
+azure-common==1.1.11
+azure-identity==1.7.0
+azure-mgmt-apimanagement==0.2.0
+azure-mgmt-authorization==2.0.0
+azure-mgmt-batch==5.0.1
+azure-mgmt-cdn==11.0.0
+azure-mgmt-compute==26.1.0
+azure-mgmt-containerinstance==9.0.0
+azure-mgmt-core==1.3.0
+azure-mgmt-containerregistry==9.1.0
+azure-containerregistry==1.0.0
+azure-mgmt-containerservice==20.0.0
+azure-mgmt-datalake-store==1.0.0
+azure-mgmt-datafactory==2.0.0
+azure-mgmt-dns==8.0.0
+azure-mgmt-marketplaceordering==0.1.0
+azure-mgmt-monitor==3.0.0
+azure-mgmt-managedservices==6.0.0
+azure-mgmt-managementgroups==0.2.0
+azure-mgmt-network==19.1.0
+azure-mgmt-nspkg==2.0.0
+azure-mgmt-privatedns==1.0.0
+azure-mgmt-redis==13.0.0
+azure-mgmt-resource==10.2.0
+azure-mgmt-rdbms==10.0.0
+azure-mgmt-search==8.0.0
+azure-mgmt-servicebus==7.1.0
+azure-mgmt-sql==3.0.1
+azure-mgmt-storage==19.0.0
+azure-mgmt-trafficmanager==1.0.0b1
+azure-mgmt-web==6.1.0
+azure-nspkg==2.0.0
+azure-storage-blob==12.11.0
+msrest==0.7.1
+msrestazure==0.6.4
+azure-keyvault==1.1.0
+azure-mgmt-keyvault==10.0.0
+azure-graphrbac==0.61.1
+azure-mgmt-cosmosdb==6.4.0
+azure-mgmt-hdinsight==9.0.0
+azure-mgmt-devtestlabs==3.0.0
+azure-mgmt-loganalytics==12.0.0
+azure-mgmt-automation==1.0.0
+azure-mgmt-iothub==2.2.0
+azure-mgmt-recoveryservices==2.0.0
+azure-mgmt-recoveryservicesbackup==3.0.0
+azure-mgmt-notificationhubs==7.0.0
+azure-mgmt-eventhub==10.1.0
+voluptuous==0.13.1
+pycodestyle==2.8.0
+yamllint==1.26.3
+cryptography==38.0.1
+pylint==2.13.5
+
+# add for spacewalk to work
+libxml2-python3

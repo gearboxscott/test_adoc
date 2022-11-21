@@ -1,0 +1,295 @@
+﻿---
+# 00-shared.yml - inventory variable source
+
+# Packer Build Options <1>
+packer_build_force: ''
+packer_build_color: false
+
+# Ansible Variables
+aap_controller_job_templatem_workflow: Base-Image-Setup-WFJT <2>
+
+controller_job_template_details:
+  name: configure_from_aap_controller.yml
+  source: configure_from_aap_controller.yml
+
+# Packer Variables
+
+# From Ansible Automation Controller Job template
+# either extra_vars or survey questions
+packer_vsphere_server: ''        # from survey_packer_vsphere_server
+packer_vsphere_datacenter: ''    # from survey_packer_vsphere_datacenter
+packer_vsphere_cluster: ''       # from survey_packer_vsphere_cluster
+packer_vsphere_network: ''       # from survey_packer_vsphere_network
+packer_vsphere_datastore: ''     # from survey_packer_vsphere_datastore
+packer_vsphere_folder: ''        # from survey_packer_vsphere_folder
+
+vmware_template_information:
+  VMware_RHEL7:
+    os_name: rhel7
+    template_build_name: 'RHEL7XVMwareHardened'
+    template_build_description: 'RHEL 7x Build - Base Image - CIS Level 1 - VMware'
+  VMware_RHEL8:
+    os_name: rhel8
+    template_build_name: 'RHEL8XVMwareHardened'
+    template_build_description: 'RHEL 8x Build - Base Image - CIS Level 1 - VMware'
+  Windows2019_Updated_Only_Template:
+    os_name: windows2019
+    template_build_name: 'Win2019-Pre-Template-Base'
+    template_build_description: 'Windows 2019 Build - Base Image - CIS Level 1 - Pre-Template - VMware'
+    part: 1
+  Windows2019_Completed_Template:
+    os_name: windows2019
+    template_build_name: 'Win2019-Template-Base'
+    template_build_description: 'Windows 2019 Build - Base Image - CIS Level 1 - VMware'
+    part: 2
+    prior_template: 'Win2019-Pre-Template-Base'
+
+# Vaulted Passwords
+vaulted_scott_password: <redacted inline encrypted password with ansible-vault>
+vaulted_console_password: <redacted inline encrypted password with ansible-vault>
+vaulted_grub_password: <redacted inline encrypted password with ansible-vault>
+
+# Following Sections are used by the Kickstart Configuration File Jinja Templates
+# to create those files when they are rendered.
+
+# Linux Software Package
+#
+# List has common will be installed on all version of linux and supplements the packages installed by `@Core` and `@Base`.
+
+packages:
+  common:
+    - "-dracut-config-rescue"
+    - "-ntpdate"
+    - "acpid"
+    - "aide"
+    - "chkconfig"
+    - "dmidecode"
+    - "findutils"
+    - "gzip"
+    - "less"
+    - "man-pages.noarch"
+    - "perl"
+    - "sed"
+    - "sysfsutils"
+    - "tmpwatch"
+    - "yp-tools"
+    - "ypbind"
+  rhel7:
+    - "Require @Base"
+    - "@Base"
+    - "@core"
+    - "@console-internet"
+    - "screen"
+  rhel8:
+    - "@Base"
+    - "@core"
+
+# Linux Services List
+#
+# This service will be enable or disable via the kickstart configuration file in the %post section during the loading of the OS.
+
+services:
+  rhel7:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+  rhel8:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+
+# Partition Tables
+#
+# The hardened section will be called by a role to set the partition in a hardened state when the image is rebooted for the very last time. This is role is only updated /etc/fstab.
+#
+# The partition tables are used create separate partition on the root disk and setup
+# the mounts under LVM2. This method will work for secondary disk as well if
+# they are needed.
+
+partition_tables:
+  hardened:
+    - name: /tmp
+      src: /dev/mapper/rootvg-lv_tmp
+      fstype: xfs
+      options: 'defaults,nodev,noexec,nosuid'
+      boot: true
+      passno: 0
+      state: present
+    - name: /var/tmp
+      src: /dev/mapper/rootvg-lv_var_tmp
+      fstype: xfs
+      options: 'defaults,nodev,noexec,nosuid'
+      boot: true
+      passno: 0
+      state: present
+    - name: /var
+      src: /dev/mapper/rootvg-lv_var
+      fstype: xfs
+      options: 'defaults,nodev'
+      boot: true
+      passno: 0
+      state: present
+    - name: /home
+      src: /dev/mapper/rootvg-lv_home
+      fstype: xfs
+      options: 'defaults,nodev'
+      boot: true
+      passno: 0
+      state: present
+  rhel7:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=67583
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=16384 --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  rhel8:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=59391
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=8192  --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+
+# Network List
+#
+# The nameservers section will setup up the common DNS servers that available to
+# all the images during the build.
+#
+# The OSes section will assign the IP Address to the images during the build so
+# ssh can be used to build them out with Ansible.
+#
+# This IP Address ideally are on a build subnet.
+
+network:
+  nameservers: 10.10.10.10,10.10.10.11
+  rhel7:
+    ip: 10.10.100.100
+    gateway: 10.10.100.1
+    netmask: 255.255.255.0
+  rhel8:
+    ip: 10.10.100.101
+    gateway: 10.10.100.1
+    netmask: 255.255.255.0
+  windows2019:
+    ip: 10.10.1008.102
+    gateway: 10.10.100.1
+    cidr: 24
+
+# Used by Packer to tell the builder what drive letter to use the secondard ISO and mount it
+# that drive letter, so the Auto Untended file can be used.
+
+win_autounattend:
+  drive: 'f:'
+
+# Source Variables in HCL file
+#
+# Following Sections are used by the Packer HCL Configuration Files Jinja Templates
+# to create those files when they are rendered.
+
+packer_os_builds:
+  rhel7:
+    packer:
+      iso_path_storage: "<Name of Datastore with OS ISOs>"
+      iso_path: "ISO/rhel-server-7.9-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_vmware_rhel7.cfg"
+      ks_cfg: ks_vmware_rhel7.cfg
+      ks_cfg_template: ks_vmware_rhel7.cfg.j2
+      pkr_cfg: vsphere-vmware-rhel7.pkr.hcl
+      pkr_cfg_template: vsphere-vmware-rhel7.pkr.hcl.j2
+      os_guest_type: rhel7_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: rhel7-builder
+      provisioner_sources: sources.vsphere-iso.rhel7-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Denver
+      selinux: "--permissive"
+      auth_options: '--enableshadow --passalgo=sha512'
+      passalgo: sha512
+  rhel8:
+    packer:
+      iso_path_storage: "<Name of Datastore with OS ISOs>"
+      iso_path: "ISO/rhel-8.7-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_vmware_rhel8.cfg"
+      ks_cfg: ks_onprem_rhel8.cfg
+      ks_cfg_template: ks_vmware_rhel8.cfg.j2
+      pkr_cfg: vsphere-vmware-rhel8.pkr.hcl
+      pkr_cfg_template: vsphere-vmware-rhel8.pkr.hcl.j2
+      os_guest_type: rhel8_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: rhel8-builder
+      provisioner_sources: sources.vsphere-iso.rhel8-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Denver
+      selinux: "--permissive"
+  windows2019:
+    packer:
+      iso_path_storage: "<Name of Datastore with OS ISOs>"
+      iso_path: "ISO/windows2019.iso"
+      pkr_part1_cfg: windows-server-2019-part1.pkr.hcl
+      pkr_part1_cfg_template: windows-server-2019-part1.pkr.hcl.j2
+      pkr_part2_cfg: windows-server-2019-part2.pkr.hcl
+      pkr_part2_cfg_template: windows-server-2019-part2.pkr.hcl.j2
+      win_cfg: autounattend.xml
+      win_cfg_template: autounattend.xml.2019.j2
+      os_guest_type: windows9Server64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: true
+      disk_size: 40960
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: lsilogic-sas
+      provisioner_source: windows2019-builder
+      provisioner_iso_sources: sources.vsphere-iso.windows2019-builder
+      provisioner_clone_sources: sources.vsphere-clone.windows2019-builder
+      provisioner_iso: vsphere-iso
+      provisioner_clone: vsphere-clone
+    execenv_iso_path: '{{ working_dir_path }}/windows2019'
+    execenv_scripts_path: '{{ working_dir_path }}/windows2019/scripts'
+    execenv_answer_files: '{{ working_dir_path }}/windows2019/answer_files'
+    template_scripts_path: scripts
+    scripts:
+      - disable-network-discovery.cmd
+      - enable-rdp.cmd
+      - install-vm-tools.cmd
+      - set-temp.ps1
+      - winrm-ansible.ps1
+
+...

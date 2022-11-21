@@ -1,0 +1,26 @@
+﻿---
+# Variable for Windows Servers
+
+# Windows Connections <1>
+
+ansible_connection: winrm
+ansible_winrm_server_cert_validation: ignore
+ansible_winrm_transport: ntlm
+ansible_port: 5986
+#ansible_winrm_operation_timeout_sec: 200
+#ansible_winrm_read_timeout_sec: 250
+
+# Windows Updates Variables <2>
+
+windows_update_category_names:
+  - CriticalUpdates
+  - SecurityUpdates
+  - UpdateRollups
+
+#windows_update_reject_list: ''
+
+windows_update_reboot: true <3>
+windows_update_reboot_timeout: 3600 <4>
+wu_log_path: 'c:\wu_updates.log' <5>
+
+...

@@ -1,0 +1,35 @@
+---
+# site.yml for RHIT-Ansible-OS-Base-Images
+
+- name: Project Packer-OS-Base-Images
+  hosts: localhost <1>
+  connection: local <2>
+  gather_facts: true
+
+  tasks:
+    - name: Setup Variables Based on Survey questions <3>
+      ansible.builtin.set_fact:
+        task_os_name: '{{ survey_os_name }}'
+        packer_vsphere_server: '{{ survey_packer_vsphere_server }}'
+        packer_vsphere_datacenter: '{{ survey_packer_vsphere_datacenter }}'
+        packer_vsphere_cluster: '{{ survey_packer_vsphere_cluster }}'
+        packer_vsphere_network: '{{ survey_packer_vsphere_network }}'
+        packer_vsphere_datastore: '{{ survey_packer_vsphere_datastore }}'
+        packer_vsphere_folder: '{{ survey_packer_vsphere_folder }}'
+
+    - name: Setup template and OS Variables
+      ansible.builtin.set_fact:
+        os_name: '{{ vmware_template_information[task_os_name].os_name }}'
+        template_build_name: '{{ vmware_template_information[task_os_name].template_build_name }}'
+
+    - name: Project - OS-Base-Image - Create Linux Base Image using Packer
+      ansible.builtin.include_role:
+        name: Role-Packer-OS-Base-Image
+        apply:
+          tags:
+            - packer
+            - OS-Base-Images
+      tags:
+        - always
+
+...

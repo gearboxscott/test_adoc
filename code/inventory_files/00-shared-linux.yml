@@ -1,0 +1,6 @@
+﻿---
+# Variables for Linux Servers
+
+ansible_remote_tmp: $HOME/.ansible/tmp <1>
+
+...

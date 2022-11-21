@@ -1,0 +1,600 @@
+---
+# 00-shared-vmware.yml - inventory variable source - RHIT-AAP-Compute-Role-VMware-OS-Base-Image
+
+source_repo: git@github.com:reyesholdingslab/Packer-Vsphere-Linux
+working_dir_path: /tmp/working-dir
+git_settings:
+  - name: "user.email"
+    value: "SParker_c@reyesholdings.com"
+  - name: "user.name"
+    value: "Scott Parker"
+
+# Blob Storage
+blob_storage_url: https://rhitprodr2.blob.core.windows.net/software
+
+# Packer Build Options
+packer_build_force: ''
+packer_build_color: false
+
+# Ansible Variables
+aap_controller_job_templatem_workflow: RHIT-AAP-Compute-Base-Image-Setup-WFJT
+
+controller_job_template_details:
+  name: configure_from_aap_controller.yml
+  source: configure_from_aap_controller.yml
+
+# Packer Variables
+
+# From Ansible Automation Controller Job template
+# either extra_vars or survey questions
+packer_vsphere_server: ''        # from survey_packer_vsphere_server
+packer_vsphere_datacenter: ''    # from survey_packer_vsphere_datacenter
+packer_vsphere_cluster: ''       # from survey_packer_vsphere_cluster
+packer_vsphere_network: ''       # from survey_packer_vsphere_network
+packer_vsphere_datastore: ''     # from survey_packer_vsphere_datastore
+packer_vsphere_folder: ''        # from survey_packer_vsphere_folder
+packer_build_date_time: '{{ ansible_date_time.date }} @ {{ ansible_date_time.time }}'
+
+vmware_template_information:
+  OnPrem_RHEL7:
+    os_name: rhel7
+    template_build_name: 'RHEL7XOnpremHardened'
+    template_build_description: 'RHEL 7x Auto Build - Base Image CIS Level 1 - OnPrem - {{ packer_build_date_time }}'
+  OnPrem_RHEL8:
+    os_name: rhel8
+    template_build_name: 'RHEL8XOnpremHardened'
+    template_build_description: 'RHEL 8x Auto Build - Base Image CIS Level 1 - OnPrem - {{ packer_build_date_time }}'
+  OCI_OEL7:
+    os_name: oel7
+    template_build_name: 'OEL7XOCIHardened'
+    template_build_description: 'OEL 7x Auto Build - Base Image CIS Level 1 - Oracle - {{ packer_build_date_time }}'
+  OCI_OEL8:
+    os_name: oel8
+    template_build_name: 'OEL8XOCIHardened'
+    template_build_description: 'OEL 8x Auto Build - Base Image CIS Level 1 - Oracle - {{ packer_build_date_time }}'
+  Azure_RHEL7:
+    os_name: azure7
+    template_build_name: 'RHEL7XAzureHardened'
+    template_build_description: 'RHEL 7x Auto Build - Base Image CIS Level 1 - Azure - {{ packer_build_date_time }}'
+  Azure_RHEL8:
+    os_name: azure8
+    template_build_name: 'RHEL8XAzureHardened'
+    template_build_description: 'RHEL 8x Auto Build - Base Image CIS Level 1 - Azure - {{ packer_build_date_time }}'
+  Windows2019_Updated_Only_Template:
+    os_name: windows2019
+    template_build_name: 'Win2019-Pre-Template-Base'
+    template_build_description: 'Windows 2019 Auto Build - Base Image - Pre-Template - OnPrem - {{ packer_build_date_time }}'
+    part: 1
+  Windows2019_Completed_Template:
+    os_name: windows2019
+    template_build_name: 'Win2019-Template-Base'
+    template_build_description: 'Windows 2019 Auto Build - Base Image - OnPrem - {{ packer_build_date_time }}'
+    part: 2
+    prior_template: 'Win2019-Pre-Template-Base'
+  Windows2022_Updated_Only_Template:
+    os_name: windows2022
+    template_build_name: 'Win2019-Pre-Template-Base'
+    template_build_description: 'Windows 2022 Auto Build - Base Image - Pre-Template - OnPrem - {{ packer_build_date_time }}'
+    part: 1
+  Windows2022_Completed_Template:
+    os_name: windows2022
+    template_build_name: 'Win2019-Template-Base'
+    template_build_description: 'Windows 2022 Auto Build - Base Image - OnPrem - {{ packer_build_date_time }}'
+    part: 2
+    prior_template: 'Win2022-Pre-Template-Base'
+
+# Vaulted Passwords
+vaulted_scott_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          63326662386461383039613939303534626131653437366534386636626364306236363830393132
+          6130653237333833663864633566633032663961666239370a353466386164393965356432656230
+          34323962633732613834643632616135643965663030653531653364386563313563653532383431
+          3730366166386365390a373839636438386637303261383661623336363835356665313162623161
+          35323764666661613538346565366265313533656637353063326633333263353638
+vaulted_console_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          65303637363030336539323661666462663038613435613234303534373963366131663731383934
+          3731323334323130643062646563323933656561656639300a346636633830373961613866353332
+          64613139393964666364343565346365333533346465653065626531366532323461393864323039
+          3733346464653435300a636263316338356532323237323135353739396361633461643934363033
+          63336233376634396637616532653636326438626535346134666134323264633561653035323132
+          64626130393961643933623231306166333066636435646438353564323664666331343163316162
+          38356432666432366631303332343535393432333230363035353039633635366563393462643333
+          64363832656633313063353131396334346539616161663633366632653734323562653566323833
+          64353132383437323965353965666138336233646134326464613864663230386361
+vaulted_grub_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          62343534393664356137316164616365623362376631303165633931396530306631656433323063
+          3032396363323538383064356238373635376333643963620a363861633137653064663934396434
+          61663736656266353533323465353064656163323133633636323135323264623936653263336135
+          3439663863383061350a306362376337396663613932656131343834656364656365346664323534
+          66346630326262346263323132373962623465623632656163393232613166636331343063353132
+          63343031363731656336386238666134346166313064653432303164633231323935646363343036
+          36346138623362363835333830373735613461336235353533663766346639653534663363633831
+          32653535323534633238376637613435616165386537316665623335396361373030306164326238
+          61663338666262373264633535386635353761656661633064636364666531633931393164386663
+          38613138613538393836353139653064366164326164306531376430663930343565613061616364
+          37666139663965313735353961333961313534383165363034613464313334323063316637643361
+          38363238346634383064306133623064653737376361613932356338333065353564636139663965
+          38346365393930643761623363333965333735623732316638623932363535343164393931646266
+          65623731633737306330333264393761633133376261616366313136646537636630666430626162
+          38663637326262646530353066653336356166616630666538613766656436303731326333316266
+          63646333313635663637623839333639663562623366383239323032323931373833373662386131
+          32363838623037643265343532633031643266306238383739663963313161643663393637623964
+          3964343034316266366663373834666162366332323362303532
+
+# Linux Software Package List
+packages:
+  common:
+    - "-ntpdate"
+    - "acpid"
+    - "aide"
+    - "chkconfig"
+    - "dmidecode"
+    - "findutils"
+    - "gzip"
+    - "less"
+    - "man-pages.noarch"
+    - "perl"
+    - "sed"
+    - "sysfsutils"
+    - "tmpwatch"
+    - "yp-tools"
+    - "ypbind"
+  rhel7:
+    - "Require @Base"
+    - "@Base"
+    - "@core"
+    - "@console-internet"
+    - "screen"
+    - "-dracut-config-rescue"
+  rhel8:
+    - "@Base"
+    - "@core"
+    - "-dracut-config-rescue"
+  oel7:
+    - "Require @Base"
+    - "@Base"
+    - "@core"
+    - "iscsi-initiator-utils-iscsiuio"
+    - "iscsi-initiator-utils"
+    - "oracle-epel-release-el7"
+    - "screen"
+    - "shim"
+    - "-dracut-config-rescue"
+  oel8:
+    - "Require @Base"
+    - "@Base"
+    - "@core"
+    - "iscsi-initiator-utils-iscsiuio"
+    - "iscsi-initiator-utils"
+    - "shim"
+  azure7:
+    - "Require @Base"
+    - "@Base"
+    - "@core"
+    - "@console-internet"
+    - "screen"
+    - "-dracut-config-rescue"
+  azure8:
+    - "@Base"
+    - "@core"
+    - "-dracut-config-rescue"
+
+# Linux Services List
+services:
+  rhel7:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+  rhel8:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+  oel7:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+  oel8:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+  azure7:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+      - haldaemon
+      - mcstrans
+      - sysstat
+  azure8:
+    enabled:
+      - chronyd
+      - sshd
+      - ypbind
+    disabled:
+      - iptables
+      - ip6tables
+      - yum-updatesd
+
+# Partition Tables
+partition_tables:
+  hardened:
+    - name: /tmp
+      src: /dev/mapper/rootvg-lv_tmp
+      fstype: xfs
+      options: 'defaults,nodev,noexec,nosuid'
+      boot: true
+      passno: 0
+      state: present
+    - name: /var/tmp
+      src: /dev/mapper/rootvg-lv_var_tmp
+      fstype: xfs
+      options: 'defaults,nodev,noexec,nosuid'
+      boot: true
+      passno: 0
+      state: present
+    - name: /var
+      src: /dev/mapper/rootvg-lv_var
+      fstype: xfs
+      options: 'defaults,nodev'
+      boot: true
+      passno: 0
+      state: present
+    - name: /home
+      src: /dev/mapper/rootvg-lv_home
+      fstype: xfs
+      options: 'defaults,nodev'
+      boot: true
+      passno: 0
+      state: present
+  rhel7:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=67583
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=16384 --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  rhel8:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=59391
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=8192  --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  oel7:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=67583
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=16384 --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  oel8:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=59391
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=8192  --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  azure7:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=67583
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=16384 --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+  azure8:
+    - part pv.253 --fstype="lvmpv" --ondisk=sda --size=59391
+    - part /boot  --fstype="xfs"   --ondisk=sda --size=2048
+    - volgroup rootvg --pesize=4096 pv.253
+    - logvol /var/tmp --fstype="xfs"  --size=4096  --name=var_tmp --vgname=rootvg --name=lv_var_tmp
+    - logvol /var     --fstype="xfs"  --size=8192  --name=var     --vgname=rootvg --name=lv_var
+    - logvol swap     --fstype="swap" --size=8192  --name=swap    --vgname=rootvg --name=lv_swap
+    - logvol /        --fstype="xfs"  --size=22517 --name=root    --vgname=rootvg --name=lv_root
+    - logvol /home    --fstype="xfs"  --size=8192  --name=home    --vgname=rootvg --name=lv_home
+    - logvol /tmp     --fstype="xfs"  --size=8192  --name=tmp     --vgname=rootvg --name=lv_tmp
+
+# Network List
+network:
+  nameservers: 172.16.182.17,172.16.182.19,8.8.8.8
+  rhel7:
+    ip: 10.12.188.100
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  rhel8:
+    ip: 10.12.188.101
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  oel7:
+    ip: 10.12.188.102
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  oel8:
+    ip: 10.12.188.103
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  azure7:
+    ip: 10.12.188.104
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  azure8:
+    ip: 10.12.188.105
+    gateway: 10.12.188.1
+    netmask: 255.255.255.0
+  windows2019:
+    ip: 10.12.188.106
+    gateway: 10.12.188.1
+    cidr: 24
+  windows2022:
+    ip: 10.12.188.107
+    gateway: 10.12.188.1
+    cidr: 24
+
+# Source Variables in HCL file
+
+packer_os_builds:
+  rhel7:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/rhel-server-7.9-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_onprem_rhel7.cfg"
+      ks_cfg: ks_onprem_rhel7.cfg
+      ks_cfg_template: ks_onprem_rhel7.cfg.j2
+      pkr_cfg: vsphere-onprem-rhel7.pkr.hcl
+      pkr_cfg_template: vsphere-onprem-rhel7.pkr.hcl.j2
+      os_guest_type: rhel7_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: rhel7-builder
+      provisioner_sources: sources.vsphere-iso.rhel7-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+      auth_options: '--enableshadow --passalgo=sha512'
+      passalgo: sha512
+  rhel8:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/rhel-8.7-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_onprem_rhel8.cfg"
+      ks_cfg: ks_onprem_rhel8.cfg
+      ks_cfg_template: ks_onprem_rhel8.cfg.j2
+      pkr_cfg: vsphere-onprem-rhel8.pkr.hcl
+      pkr_cfg_template: vsphere-onprem-rhel8.pkr.hcl.j2
+      os_guest_type: rhel8_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: rhel8-builder
+      provisioner_sources: sources.vsphere-iso.rhel8-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+  oel7:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/OracleLinux-R7-U9-Server-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_onprem_oel7.cfg"
+      ks_cfg: ks_oci_oel7.cfg
+      ks_cfg_template: ks_oci_oel7.cfg.j2
+      pkr_cfg: vsphere-oci-oel7.pkr.hcl
+      pkr_cfg_template: vsphere-oci-oel7.pkr.hcl.j2
+      os_guest_type: rhel7_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: oel7-builder
+      provisioner_sources: sources.vsphere-iso.oel7-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+      auth_options: '--enableshadow --passalgo=sha512'
+      passalgo: sha512
+  oel8:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/OracleLinux-R8-U6-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_oci_oel8.cfg"
+      ks_cfg: ks_oci_oel8.cfg
+      ks_cfg_template: ks_oci_oel8.cfg.j2
+      pkr_cfg: vsphere-oci-oel8.pkr.hcl
+      pkr_cfg_template: vsphere-oci-oel8.pkr.hcl.j2
+      os_guest_type: rhel8_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: oel8-builder
+      provisioner_sources: sources.vsphere-iso.oel8-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+  azure7:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/rhel-server-7.9-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_azure_rhel7.cfg"
+      ks_cfg: ks_azure_rhel7.cfg
+      ks_cfg_template: ks_azure_rhel7.cfg.j2
+      pkr_cfg: vsphere-azure-rhel7.pkr.hcl
+      pkr_cfg_template: vsphere-azure-rhel7.pkr.hcl.j2
+      os_guest_type: rhel7_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: azure7-builder
+      provisioner_sources: sources.vsphere-iso.azure7-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+      auth_options: '--enableshadow --passalgo=sha512'
+      passalgo: sha512
+  azure8:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/rhel-8.7-x86_64-dvd.iso"
+      iso_ks_path: "ISO/ks_azure_rhel8.cfg"
+      ks_cfg: ks_azure_rhel8.cfg
+      ks_cfg_template: ks_azure_rhel8.cfg.j2
+      pkr_cfg: vsphere-azure-rhel8.pkr.hcl
+      pkr_cfg_template: vsphere-azure-rhel8.pkr.hcl.j2
+      os_guest_type: rhel8_64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: false
+      disk_size: 69632
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: pvscsi
+      provisioner_source: azure8-builder
+      provisioner_sources: sources.vsphere-iso.azure8-builder
+      provisioner_iso: vsphere-iso
+    kickstart:
+      timezone: America/Chicago
+      selinux: "--permissive"
+  windows2019:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/windows2019.iso"
+      pkr_part1_cfg: windows-server-2019-part1.pkr.hcl
+      pkr_part1_cfg_template: windows-server-2019-part1.pkr.hcl.j2
+      pkr_part2_cfg: windows-server-2019-part2.pkr.hcl
+      pkr_part2_cfg_template: windows-server-2019-part2.pkr.hcl.j2
+      win_cfg: autounattend.xml
+      win_cfg_template: autounattend.xml.2019.j2
+      os_guest_type: windows9Server64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: true
+      disk_size: 40960
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: lsilogic-sas
+      provisioner_source: windows2019-builder
+      provisioner_iso_sources: sources.vsphere-iso.windows2019-builder
+      provisioner_clone_sources: sources.vsphere-clone.windows2019-builder
+      provisioner_iso: vsphere-iso
+      provisioner_clone: vsphere-clone
+    execenv_iso_path: '{{ working_dir_path }}/windows2019'
+    execenv_scripts_path: '{{ working_dir_path }}/windows2019/scripts'
+    execenv_answer_files: '{{ working_dir_path }}/windows2019/answer_files'
+    template_scripts_path: scripts
+    scripts:
+      - disable-network-discovery.cmd
+      - enable-rdp.cmd
+      - install-vm-tools.cmd
+      - set-temp.ps1
+      - winrm-ansible.ps1
+  windows2022:
+    packer:
+      iso_path_storage: xLocalDisk-rh-gdc3-bmesx03-D1
+      iso_path: "ISO/windows2022.iso"
+      pkr_part1_cfg: windows-server-2022-part1.pkr.hcl
+      pkr_part1_cfg_template: windows-server-2022-part1.pkr.hcl.j2
+      pkr_part2_cfg: windows-server-2022-part2.pkr.hcl
+      pkr_part2_cfg_template: windows-server-2022-part2.pkr.hcl.j2
+      win_cfg: autounattend.xml
+      win_cfg_template: autounattend.xml.2022.j2
+      os_guest_type: windows9Server64Guest
+      vm_cpu_num: 2
+      mem_size: 4096
+      ram_reserve_all: true
+      disk_size: 40960
+      disk_thin_provisioned: true
+      network_card: vmxnet3
+      disk_controller_type: lsilogic-sas
+      provisioner_source: windows2022-builder
+      provisioner_iso_sources: sources.vsphere-iso.windows2022-builder
+      provisioner_clone_sources: sources.vsphere-clone.windows2022-builder
+      provisioner_iso: vsphere-iso
+      provisioner_clone: vsphere-clone
+    execenv_iso_path: '{{ working_dir_path }}/windows2022'
+    execenv_scripts_path: '{{ working_dir_path }}/windows2022/scripts'
+    execenv_answer_files: '{{ working_dir_path }}/windows2022/answer_files'
+    template_scripts_path: scripts
+    scripts:
+      - disable-network-discovery.cmd
+      - enable-rdp.cmd
+      - install-vm-tools.cmd
+      - set-temp.ps1
+      - winrm-ansible.ps1
+
+win_autounattend:
+  drive: 'f:'
+
+...
