@@ -4,13 +4,14 @@ ifdef::env-github[]
 :important-caption: :heavy_exclamation_mark:
 :caution-caption: :fire:
 :warning-caption: :warning:
-endif::[]
 
 include::vars/render-vars.adoc[]
 include::vars/document-vars.adoc[]
 include::vars/redhat-vars.adoc[]
 include::vars/customer-vars.adoc[]
 include::locale/attributes.adoc[]
+
+endif::[]
 
 // Adding logo to the coverpage.
 // Change the pdfwidth to improve embedding
