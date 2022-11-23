@@ -21,7 +21,7 @@
     project: 0_VMware OS Templates Project
     scm_branch: ''
     verbosity: 2
-    execution_environment: Reyes Packer Execution Environment
+    execution_environment: Custom Execution Environment
     schedules: []
     skip_tags: ''
     start_at_task: ''
@@ -95,10 +95,10 @@
         required: true
         type: multiplechoice
         variable: survey_os_name
-      - choices: sdvcentersandbox01.reyesholdings.com
-        default: sdvcentersandbox01.reyesholdings.com
+      - choices: {vsphere_host}
+        default: {vsphere_host}
         formattedChoices:
-        - choice: sdvcentersandbox01.reyesholdings.com
+        - choice: {vsphere_host}
           id: 0
           isDefault: true
         max: 1024

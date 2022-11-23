@@ -1,0 +1,31 @@
+# sub-project file for Project RHIT-Ansible-OS-Base-Images - rh_register.yml
+---
+
+- name: Project Packer-OS-Base-Images - Red Hat Register to RHSM
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+    - name: Project - OS-Base-Image - Red Hat Register to RHSM
+      when: ansible_distribution == 'RedHat'
+      block:
+
+        - name: Register to RHSM Role
+          ansible.builtin.include_role:
+            name: Role-Redhat-Register
+            tasks_from: main.yml
+          when: ansible_distribution == "RedHat"
+
+        - name: Show Image Is Registered
+          ansible.builtin.command: '/usr/sbin/subscription-manager identity'
+          register: subman_output
+          when: ansible_distribution == "RedHat"
+
+        - name: Print Subscription Manager Results
+          ansible.builtin.debug:
+            var: subman_output
+          when: ansible_distribution == "RedHat"
+
+...

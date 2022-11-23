@@ -22,7 +22,7 @@
         os_name: '{{ vmware_template_information[task_os_name].os_name }}'
         template_build_name: '{{ vmware_template_information[task_os_name].template_build_name }}'
 
-    - name: Project - OS-Base-Image - Create Linux Base Image using Packer
+    - name: Create Linux Base Image using Packer
       ansible.builtin.include_role:
         name: Role-Packer-OS-Base-Image
         apply:

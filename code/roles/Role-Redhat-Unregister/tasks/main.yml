@@ -1,0 +1,11 @@
+# main.yml - tasks file for RH-AAP-Compute-Role-Redhat-Unregister
+---
+
+- name: UnSubscribe RedHat Servers
+  community.general.redhat_subscription:
+    state: absent
+    activationkey: "{{ redhat_register_activation_key }}"
+    org_id: "{{ redhat_register_organization_id }}"
+  when: ansible_distribution == "RedHat"
+
+...

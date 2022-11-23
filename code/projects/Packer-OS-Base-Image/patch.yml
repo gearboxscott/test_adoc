@@ -1,0 +1,17 @@
+# sub-project file for Project RHIT-Ansible-OS-Base-Images - qualys.yml
+---
+
+- name: Project Packer-OS-Base-Images - Patch the Image
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+
+    - name: Patch The Image
+      ansible.builtin.include_role:
+        name: Role-Patch
+        tasks_from: main.yml
+
+...

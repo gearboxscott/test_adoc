@@ -7,7 +7,7 @@ build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: "-v"
 
   # Execution Environment Base Image
-  EE_BASE_IMAGE: "sdatmhub.reyesholdings.com/ee-supported-rhel8:latest"
+  EE_BASE_IMAGE: "{automation_hub}/ee-supported-rhel8:latest"
 
 ansible_config: 'ansible.cfg'
 

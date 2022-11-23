@@ -1,0 +1,50 @@
+# sub-project file for Project RHIT-Ansible-OS-Base-Images - cis.yml
+---
+
+- name: Project Packer-OS-Base-Images - Apply CIS Rules to Image
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+    - name: Project - Packer-OS-Base-Image - Apply CIS Rules to Linux Image version 7
+      when: ansible_distribution == 'RedHat' or
+            ansible_distribution_major_version == '7'
+      block:
+
+        - name: "Harden Image with CIS"
+          ansible.builtin.include_role:
+            name: {namespace}.cis.rhel7_cis
+            apply:
+              tags:
+                - level1-server
+          register: role_cis_rhel7_cis_results
+
+    - name: Project - Packer-OS-Base-Image - Apply CIS Rules to Linux Image version 8
+      when: ansible_distribution == 'RedHat' or
+            ansible_distribution_major_version == '8'
+      block:
+
+        - name: "Harden Image with CIS"
+          ansible.builtin.include_role:
+            name: {namespace}.cis.rhel8_cis
+            apply:
+              tags:
+                - level1-server
+          register: role_cis_rhel8_cis_results
+
+    - name: Project - Packer-OS-Base-Image - Apply CIS Rules to Windows Image version 2019
+      when: ansible_os_family == 'Windows' and
+            '"2019" in ansible_os_name'
+      block:
+
+        - name: "Harden Image with CIS"
+          ansible.builtin.include_role:
+            name: {namespace}.cis.windows_2019_cis
+            apply:
+              tags:
+                - level1-memberserver
+          register: role_cis_windows_2019_cis_results
+
+...

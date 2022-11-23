@@ -1,0 +1,20 @@
+# main.yml -- tasks file for Role-Redhat-Register
+---
+
+- name: Register RHEL Server
+  when: ansible_distribution == "RedHat"
+  block:
+
+  - name: Check redhat registration status
+    ansible.builtin.shell: |
+      subscription-manager status | grep 'Overall Status' | awk '{print $3}'
+    register: redhat_register_status
+
+  - name: Subscribe RedHat Servers
+    community.general.redhat_subscription:
+      state: present
+      activationkey: "{{ redhat_register_activation_key }}"
+      org_id: "{{ redhat_register_organization_id }}"
+    when: redhat_register_status.stdout != 'Current'
+
+...

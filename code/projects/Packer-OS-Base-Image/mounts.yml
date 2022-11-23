@@ -1,0 +1,17 @@
+# sub-project file for Project RHIT-Ansible-OS-Base-Images - qualys.yml
+---
+
+- name: Project Packer-OS-Base-Images - Harden Linux Mount Points or Partitions
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+
+    - name: Harden Linux Mount Points or Partitions
+      ansible.builtin.include_role:
+        name: Role-Hardened-Mounts
+        tasks_from: main.yml
+
+...

@@ -1,0 +1,26 @@
+---
+# sub-project file rh_unregister for Project RHIT-Ansible-OS-Base-Images
+
+- name: Project Packer-OS-Base-Images - Red Hat Un-Register
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+    - name: Red Hat Un-Register from RHSM
+      when: ansible_distribution == 'RedHat' or
+            ansible_distribution == 'OracleLinux'
+      block:
+
+        - name: Disconnect from RHSM Role
+          ansible.builtin.include_role:
+            name: Role-Redhat-Unregister
+            tasks_from: main.yml
+          register: subman_output
+
+        - name: Print Subscription Manager Results
+          ansible.builtin.debug:
+            var: subman_output
+
+...

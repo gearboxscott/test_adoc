@@ -1,10 +1,3 @@
-ifdef::env-github[]
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-:caution-caption: :fire:
-:warning-caption: :warning:
-endif::[]
 
 include::vars/render-vars.adoc[]
 include::vars/document-vars.adoc[]
@@ -12,11 +5,11 @@ include::vars/redhat-vars.adoc[]
 include::vars/customer-vars.adoc[]
 include::locale/attributes.adoc[]
 
-// Adding logo to the coverpage.
-// Change the pdfwidth to improve embedding
-// ifeval::["{customerlogo}" != "empty"]
-// :title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
-// endif::[]
+Adding logo to the coverpage.
+Change the pdfwidth to improve embedding
+ifeval::["{customerlogo}" != "empty"]
+:title-logo-image: image:{customerlogo}[pdfwidth=50%,align=center]
+endif::[]
 
 = {subject}
 
@@ -24,7 +17,7 @@ include::locale/attributes.adoc[]
 
 {description}
 
-:toc:
+toc::[]
 
 == The Story
 
@@ -40,7 +33,34 @@ The other part of this story is the Packer and Automation workflow is able to pr
 
 == Process Flow
 
-##TODO##  Insert process flow diagram here.
+// [mermaid]
+// ....
+// graph TD
+//   A((Start)) --> B(((Ansible Contoller)))
+//   style A fill:green,stroke:#333,stroke-width:6px
+//   B --> |Image Build Part One| C[Run Packer Base OS Image Job Template]
+//   C --> |Ansible Survey Questions| D(calls Role-Packer-OS-Base-Image)
+//   D --> E[/OS Type drives what comes next/]
+//   E --> |Linux| F(Packer starts building with Linux HCL Configuration)
+//   E --> |Windows| G(Packer starts building with Windows HCL Configuration)
+//   F --> |Linux image is built from ISO| H[Packer Ansible Provisioner runs configure_from_aap_controller.yml]
+//   H --> |Image Build Part Two| B
+//   B --> |Post Image Build| I[/OS Type determines which Workflow Job Template is executed/]
+//   I --> |Linux Post Build| J[Run Base-Image-Linux-Setup-WFJT]
+//   J --> |Run Linux Post Build Job Templates| K[Run Role-RedHat-Register]
+//   K --> L[Apply CIS Rules to Image via CIS Collection to Linux Image]
+//   L --> M[Run other Roles to apply cloud destination packages, etc.]
+//   M --> |Image Done| Q
+//   I --> |Windows Post Build| O[/Run Windows Part One or Part Two/]
+//   O --> |Update Only| P[Run Windows-2019-Base-Image-Part-One-WFJT]
+//   P --> |Image Done| Q[Convert to Template]
+//   O --> |Complate Windows Build| R[Run Windows-2019-Base-Image-Part-Two-WFJT]
+//   R --> S[Apply CIS Rules to Image via CIS Collection to Windows Image]
+//   S --> T[Run other Roles to apply cloud destination packages, etc.]
+//   T --> Q
+//   Q --> |All Done| U((Done))
+//   style U fill:red,stroke:#333,stroke-width:6px
+// ....
 
 == Requirements
 
@@ -203,7 +223,6 @@ This file contains variables for Jinja2 templates that will create Packer Templa
 ----
 include::code/inventory_files/00-shared.yml[]
 ----
-<1> Packer will show information in color but when executing it from AAP, those color codes will not render correctly and really makes a mess in the Job Log.
 
 === File: `00-shared-linux.yml``
 
@@ -212,7 +231,6 @@ include::code/inventory_files/00-shared.yml[]
 ----
 include::code/inventory_files/00-shared-linux.yml[]
 ----
-<1> After the partitions are hardened, one parameter call `noexec` will keep Ansible from running on the new image, so a new path for executing Ansible will need to be provided.
 
 === File: `00-shared-windows.yml``
 
@@ -221,11 +239,6 @@ include::code/inventory_files/00-shared-linux.yml[]
 ----
 include::code/inventory_files/00-shared-windows.yml[]
 ----
-<1> Provide Ansible with a method of connecting to Windows to execute Ansible playbooks and roles.
-<2> After the OS is built, Windows is patch using the categories listed.
-<3> Determine whether to reboot Windows after patching or not.
-<4> How long to wait for the reboot to complete and return access to Windows for Ansible to continue.
-<5> Where to log the patching activities.
 
 === File: `inventory`
 
@@ -276,39 +289,186 @@ The `site.yml`` in the project called `Packer-OS-Base-Image` contains the follow
 .'Packer-OS-Base-Image/site.yml`.
 [source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
 ----
-include::code/site.yml[]
+include::code/projects/Packer-OS-Base-Image/site.yml[]
 ----
-<1> `hosts;` is set to `localhost` because this run directly on the execution node.
-<2> `connection:` is set to 'local' because this run directly on the execution node.
-<3> All these variable are passed into the playbook via Survey questions ansible in the Job Template on the Ansible Controller.
 
 Once the Job Template is executed, it will use the variables from the Job Template Survey question and call the role `Role-Packer-OS-Base-Image`. This role uses Packer to build the image, then called Ansible Controller to call Workflow Job Templates to setup the image be hardened, etc.
 
 .'Role-Packer-OS-Base-Image/main.yml`.
 [source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
 ----
-include::code/main.yml[]
+include::code/roles/Role-Packer-OS-Base-Image/tasks/main.yml[]
 ----
 
-== Packer Setup
+When looking through the code for the role, there are two sections that setup HCL, ks.cfg, etc. files on the execution environment for Linux and one section for Windows.  The templates for those configuration are taken from roles template directory. The rendered configuration files will be used by Packer to build out the Base image. There are Packer HCL templates for several OSes, but for this document, showing how the Linux ones work and finally the windows to learn the concept and flow.
 
-Put stuff here to the packer setup
+One of the primary configuration file that needs to be rendered is a Packer HCL build file that end in `pkr.hcl`. The Linux HCL file looks like the following:
 
+.'Role-Packer-OS-Base-Image/templates/rhel7.pkr.hcl.j2`.
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/rhel7.pkr.hcl.j2[]
+----
 
+The `rhel7.pkr.hcl.j2` is rendered on the custom execution environment as `rhel7.pkr.hcl`.  It will tell Packer where to place the base images, the configuration of the base images like memory, cpu, disk, etc.  It will call the OS ISO file already on the vSphere server and create a virtual ISO with the kickstart configuration file inside it.  The kickstart configuration looks like the follow:
+
+.'Role-Packer-OS-Base-Image/templates/rhel7.cfg.j2`.
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/rhel7.cfg.j2[]
+----
+
+Both of the Jinja 2 based template rely heavily on the variables that are list in inventory variable file `00-shared.yml` that was listed in the inventory section early in this document.
+
+The last section of the Packer HCL configuration file does a `packer init`, `packer validation` and finally a `packer build` to start the base image OS build on the VMware cloud. Inside the Packer HCL configuration file is a section in the build that call the Ansible Controller to have the Controller run Workflow Job Templates against the base OS image to do hardening, and other configuration as needed.  This is the section of the `rhel7.pkr.hcl` file does the API call to Ansible Controller:
+
+.'Role-Packer-OS-Base-Image/templates/rhel7.pkr.hcl.j2`.
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/rhel7.pkr.hcl.j2[lines=112..130]
+----
+
+The API call is done with another rendered template called `configure_from_aap_controller.yml.j2`. This file will do the actual call of the Workflow Job Templates that gets to post base image build configured.
+
+.'Role-Packer-OS-Base-Image/templates/configure_from_aap_controller.yml`.
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/configure_from_aap_controller.yml[]
+----
+
+The file is broken up into sections for different cloud environments. This one just shows the VMware cloud configuration.
+
+The Windows is the same that was described above, but one key file that has changed and takes the place of the kickstart configuration file. Windows uses a `autounttended.xml` file to configure Windows:
+
+.'Role-Packer-OS-Base-Image/templates/autounattended.xml.2019.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/autounattend.xml.2019.j2[]
+----
+
+There are several example of this file on the internet or one can be created by using the following references:
+
+* https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs?view=windows-10[Update Windows Settins and Scripts Create Your Own Answer File SXS]
+* https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/[Unattended Windows Setup Reference]
+* https://www.windowsafg.com/[Windows Answer File Generator]
+* https://www.windowsafg.com/server2019.html[Windows Answer File Generator for Server 2019]
+
+The other item that answer file does is runs various scripts to configure the Windows base image further before Ansible takes over. This script are place on the custom execution environment as well and are included CDROM that packer builds. For this image build the follow script were called from the ansible file:
+
+.'Role-Packer-OS-Base-Image/templates/scripts/disable-network-discovery.cmd.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/disable-network-discovery.cmd.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/disable-winrm.ps1.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/disable-winrm.ps1.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/enable-rdp.cmd.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/enable-rdp.cmd.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/enable-winrm.ps1.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/enable-winrm.ps1.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/install-vm-tools.cmd.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/install-vm-tools.cmd.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/set-temp.ps1.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/set-temp.ps1.j2[]
+----
+
+.'Role-Packer-OS-Base-Image/templates/scripts/winrm-ansible.ps1.j2`
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Packer-OS-Base-Image/templates/scripts/winrm-ansible.ps1.j2[]
+----
+
+There are two steps for Windows, the first round will create a Windows OS base image that is fully patches. The second round will call the same steps as the Linux process by calling Workflow Job Template in Ansible Controller.
+
+== Other Playbooks in Packer-OS-Base-Image Project
+
+Hardening the Base OS Image is one of the principles of this procedure. There are few playbooks in directory that will harden the image, listed here a few keys ones:
+
+* Register and Un-Register Linux for Updates
+* Patch Linux
+* Windows Update
+* CIS
+* Linux Partition Mount Hardening
+* Various Post Configuration that installs agents, setups, etc. different cloud environments.
+
+Some of the key playbooks are listed next:
+
+.'Packer-OS-Base-Image/register.yml'
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/projects/Packer-OS-Base-Image/register.yml[]
+----
+
+.'Packer-OS-Base-Image/unregister.yml'
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/projects/Packer-OS-Base-Image/unregister.yml[]
+----
+
+.'Packer-OS-Base-Image/patch.yml'
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/projects/Packer-OS-Base-Image/patch.yml[]
+----
+
+.'Packer-OS-Base-Image/cis.yml'
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/projects/Packer-OS-Base-Image/cis.yml[]
+----
+
+.'Packer-OS-Base-Image/windows_update.yml'
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/projects/Packer-OS-Base-Image/windows_update.yml[]
+----
 
 == Ansible Controller
 
+The other items that Ansible Controller besides Job Templates, Workflow Job Templates for Base OS Image build are:
+
+* Inventory with all the Host Records for each Base OS Image that will be built.
+* Inventory source that pointing to the inventory variable project in git.
+* A number of credentials have been setup to allow the controller to run packer, access the image and other resources.
+
 == Variables
 
-== Play by Play
+The inventory variable files contain a lot of variables to list here and the files list in prior section have outlined many of the variables that have been used.
 
 == How to make changes and updates
 
+For the most part, the only changes that will happen will be following:
+
+* Adding a new OS type which will require new sections in existing dictionaries found the inventory files and most `00-shared.yml`.
+* Update existing OS ISO names when new version become available.
+* Add new roles for post build that will require a playbook in the project `Packer-OS-Base-Image`, new Job Template pointing to those playbooks and inclusion of those Job Template into Workflow Job Templates.
+
+When any inventory variable is update, sign on the Ansible Controller and manually update the inventory project that will cause the inventory source to update.
+
 == Final Thoughts
 
-== Appendix
+== Roles and Code Snippets used in the Image Builds
 
-===
+=== Packer Base OS Image Job Template
 
 This Job Template can be import into Ansible Controller using `awx import` which is part of the `awxkit` python module.
 
@@ -317,3 +477,105 @@ This Job Template can be import into Ansible Controller using `awx import` which
 ----
 include::code/job_templates/Base-Image-OS-Job-Template.yml[]
 ----
+
+=== Role Snippets
+
+==== Role-Hardened-Mounts
+
+.Role-Hardened-Mounts/tasks/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Hardened-Mounts/tasks/main.yml[]
+----
+
+==== Role-Patch
+
+.Role-Patch/tasks/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Patch/tasks/main.yml[]
+----
+
+.Role-Patch/defaults/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Patch/defaults/main.yml[]
+----
+
+.Role-Patch/handlers/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Patch/handlers/main.yml[]
+----
+
+==== Role-Redhat-Register
+
+.Role-Redhat-Register/tasks/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Redhat-Register/tasks/main.yml[]
+----
+
+.Role-Redhat-Register/defaults/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Redhat-Register/defaults/main.yml[]
+----
+
+==== Role-Redhat-Unregister
+
+.Role-Redhat-Unregister/tasks/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Redhat-register/tasks/main.yml[]
+----
+
+==== Role-Windows-Update
+
+.Role-Windows-Update/tasks/main.yml
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/roles/Role-Windows-Update/tasks/main.yml[]
+----
+
+=== Ansible Lockdown Collection
+
+For the CIS playbook and its Job Template in Ansible Controller a collection was created to pull down repository from https://github.com/ansible-lockdown[Ansible Lockdown]. The following repositories were add to the collection as submodules to make them easier to update when Ansible Lockdown updates the roles:
+
+* https://github.com/ansible-lockdown/RHEL7-CIS
+* https://github.com/ansible-lockdown/RHEL8-CIS
+* https://github.com/ansible-lockdown/Windows-2019-CIS
+
+To create submodules, refer to https://git-scm.com/book/en/v2/Git-Tools-Submodules[7.11 Git Tools - Submodules]
+
+Since Ansible doesn't support hyphens in role names, the following command was used to add the repositories to the roles directory with a name change:
+
+.Add submodules with a name change.
+[source,bash,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+git submodule add --name windows_2019_cis git@github.com:ansible-lockdown/Windows-2019-CIS.git roles/window_2019_cis
+git submodule add --name rhel7_cis git@github.com:ansible-lockdown/RHEL7-CIS.git roles/rhel7_cis
+git submodule add --name rhel8_cis git@github.com:ansible-lockdown/RHEL8-CIS.git roles/rhel8_cis
+----
+
+The `.gitmodules` will look like the following:
+
+.submodules.
+[source,ini,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/collections/CIS/.gitmodules[]
+----
+
+Create the `galaxy.yml` like the following:
+
+.galaxy.yml.
+[source,yaml,linenums,options="nowrap",subs="attributes,verbatim"]
+----
+include::code/collections/CIS/galaxy.yml[]
+----
+
+Lastly, the collection needs to added to the Private Automation Hub or present in collections directory of the Packer-OS-Base-Image Playbook.
+
+== Final Thoughts
+
+The design was structured so as much as possible to allow changes could be done with changing variables in the inventory. If a new OS is added or new post image build configurations are needed then code changes will have to happen. Using this section, should help in allow those changes to go easier.

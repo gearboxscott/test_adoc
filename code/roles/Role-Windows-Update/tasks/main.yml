@@ -1,0 +1,31 @@
+---
+# tasks file for Role-Windows-Update
+
+- name: Install all updates and reboot as many times as needed
+  ansible.windows.win_updates:
+    category_names: "{{ windows_update_category_names | default('*') }}"
+    reject_list: '{{ windows_update_reject_list | default(omit) }}'
+    state: installed
+    reboot: "{{ windows_update_reboot | default('true') }}"
+    reboot_timeout: "{{ windows_update_reboot_timeout | default('3600') }}"
+  register: win_update_results
+  ignore_unreachable: true
+
+- name: Show Windows Update Results (Install)
+  ansible.builtin.debug:
+    var: win_update_results
+
+- name: Search all updates
+  ansible.windows.win_updates:
+    category_names: "{{ windows_update_category_names | default('*') }}"
+    reject_list: '{{ windows_update_reject_list | default(omit) }}'
+    state: searched
+    log_path: '{{ wu_log_path | default(omit) }}'
+  register: win_update_results
+  ignore_unreachable: true
+
+- name: Show Windows Update Results (Searched)
+  ansible.builtin.debug:
+    var: win_update_results
+
+...

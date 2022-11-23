@@ -1,0 +1,24 @@
+---
+# sub-project file for Project RHIT-Ansible-OS-Base-Images - windows.yml
+
+- name: Project Packer-OS-Base-Images - Windows Setup
+  hosts: all
+  gather_facts: true
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+    - name: Windows Setup
+      block:
+
+        - name: Task - Windows Setup
+          ansible.builtin.include_role:
+            name: Role-Windows-Update
+            tasks_from: main.yml
+          register: subman_output
+
+        - name: Task - Windows Setup
+          ansible.builtin.debug:
+            var: subman_output
+
+...

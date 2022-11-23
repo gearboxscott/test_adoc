@@ -1,0 +1,30 @@
+---
+# tasks file for Role-Hardened-Mounts
+
+- name: Linux Partition and Mount Point Hardening
+  when: ansible_distribution == "OracleLinux" or
+        ansible_distribution == "RedHat" or
+        ansible_distribution == "Debian" or
+        ansible_distribution == "Ubuntu"
+  block:
+
+    - name: Remount a mounted volume and append exec to the existing options
+      ansible.posix.mount:
+        src: '{{ mount_point.src }}'
+        path: '{{ mount_point.name }}'
+        fstype: '{{ mount_point.fstype }}'
+        state: '{{ mount_point.state }}'
+        opts: '{{ mount_point.options }}'
+        passno: '{{ mount_point.passno }}'
+        boot: '{{ mount_point.boot }}'
+      loop: '{{ partition_tables.hardened }}'
+      loop_control:
+        loop_var: mount_point
+        label: 'Hardening {{ mount_point.name }} to {{ mount_point.options }}'
+      register: hardening_mounts
+
+    - name: Show Hardened Mounts Results
+      ansible.builtin.debug:
+        var: hardening_mounts
+
+...

@@ -1,13 +1,8 @@
 ---
 # 00-shared-vmware.yml - inventory variable source - RHIT-AAP-Compute-Role-VMware-OS-Base-Image
 
-source_repo: git@github.com:reyesholdingslab/Packer-Vsphere-Linux
+source_repo: git@github.com:{git_org}/Packer-Vsphere-Linux
 working_dir_path: /tmp/working-dir
-git_settings:
-  - name: "user.email"
-    value: "SParker_c@reyesholdings.com"
-  - name: "user.name"
-    value: "Scott Parker"
 
 # Blob Storage
 blob_storage_url: https://rhitprodr2.blob.core.windows.net/software

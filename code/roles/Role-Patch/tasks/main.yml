@@ -1,0 +1,14 @@
+# main.yml - tasks file for RH-AAP-Compute-Role-Patch
+---
+
+- name: Patch - Execute Linux Playbook
+  ansible.builtin.import_tasks: el_linux.yml
+  when: ansible_distribution == "RedHat" and
+        patch_linux_enabled | bool
+
+- name: Patch - Execute Windows Role
+  ansible.builtin.import_tasks: windows.yml
+  when: ansible_distribution.find( "Windows" ) != -1 and
+        patch_windows_enabled | bool
+
+...

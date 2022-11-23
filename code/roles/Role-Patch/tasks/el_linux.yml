@@ -1,0 +1,26 @@
+---
+# el_linux.yml - tasks file for Role-Patch
+
+- name: Patch - el_linux - Patch and Reboot block
+  notify: 'reboot server'
+  block:
+
+    - name: Patch - el_linux - Set Kernel Retention to 2.
+      ansible.builtin.lineinfile:
+        path: /etc/yum.conf
+        regexp: "^installonly_limit="
+        line: installonly_limit=2
+
+    - name: Patch - el_linux - Update All Packages to latest for RHEL
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+        update_cache: true
+        update_only: true
+      register: yum_update_status
+
+    - name: Patch - el_linux - Remove packages no longer needed
+      ansible.builtin.yum:
+        autoremove: true
+
+...

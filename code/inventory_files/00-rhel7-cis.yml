@@ -1,4 +1,5 @@
 ---
+
 # rhel7cis_notauto will auto install intrusive items
 rhel7cis_notauto: false
 

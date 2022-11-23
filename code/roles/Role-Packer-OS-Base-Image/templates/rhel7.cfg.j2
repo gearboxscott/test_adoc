@@ -1,0 +1,93 @@
+# Install a fresh new system (optional)
+install
+
+# Use textual install
+text
+
+# Specify installation method to use for installation
+# To use a different one comment out the 'url' one below, update
+# the selected choice with proper options & un-comment it
+cdrom
+
+# Set language to use during installation and the default language to use on the installed system (required)
+lang en_US.UTF-8
+
+# Set system keyboard type / layout (required)
+keyboard us
+
+# Configure network information for target system and activate network devices in the installer environment (optional)
+# --onboot	enable device at a boot time
+# --device	device to be activated and / or configured with the network command
+# --bootproto	method to obtain networking configuration for device (default dhcp)
+# --noipv6	disable IPv6 on this device
+# To use static IP configuration,
+# network --bootproto=static --ip=10.0.2.15 --netmask=255.255.255.0 --gateway=10.0.2.254 --nameserver 192.168.2.1,192.168.3.1
+network --onboot=yes --device=ens192 --bootproto=static --noipv6 --hostname={{ template_build_name }} --ip={{ network[os_name].ip }} --gateway={{ network[os_name].gateway }} --netmask={{ network[os_name].netmask }} --nameserver={{ network.nameservers }}
+
+# User Configurtion
+user --name=zeroconsoleuser --password={{ vaulted_console_password }} --iscrypted --groups=wheel
+
+# Set up the authentication options for the system (required)
+# --enableshadow	enable shadowed passwords by default
+# --passalgo		hash / crypt algorithm for new passwords
+# See the manual page for authconfig for a complete list of possible options.
+authconfig --enableshadow --passalgo={{ packer_os_builds[os_name].kickstart.passalgo }}
+
+# State of SELinux on the installed system (optional)
+# Defaults to enforcing
+selinux {{ packer_os_builds[os_name].kickstart.selinux }}
+
+# Set the system time zone (required)
+timezone --utc {{ packer_os_builds[os_name].kickstart.timezone }}
+
+# Specify how the bootloader should be installed (required)
+# Plaintext password is in vault RH/cloud/provider/common/user/linux/rh_vsphere_packer/bootloader
+bootloader --location=mbr --append="crashkernel=auto rhgb quiet" --iscrypted --password={{ vaulted_grub_password }}
+
+# Partition clearing information
+clearpart --none --initlabel
+
+{% for line in partition_tables[os_name] %}
+{{ line }}
+{% endfor %}
+
+# Packages to Install
+%packages --ignoremissing
+
+{% for line in packages[os_name] %}
+{{ line }}
+{% endfor %}
+{% for line in packages.common %}
+{{ line }}
+{% endfor %}
+
+%end
+
+%post
+exec < /dev/tty3 > /dev/tty3 2>&1
+chvt 3
+(
+
+# Determine which services to enable and disable
+
+{% set disabled_list = [] %}
+{% set enabled_list = [] %}
+{% for disabled_service in services[os_name].disabled %}
+{% set _ = disabled_list.append(  disabled_service  ) %}
+{% endfor %}
+{% for enabled_service in services[os_name].enabled %}
+{% set _ = enabled_list.append( enabled_service ) %}
+{% endfor -%}
+services --disabled={{ disabled_list | join( ',' ) }} --enabled={{ enabled_list | join( ',' ) }}
+
+# add building and admin user to wheel group
+echo "%wheel        ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/wheel
+
+chvt 1
+) 2>&1 | tee /var/log/anaconda/post-install.log
+
+%end
+
+# Reboot after the installation is complete (optional)
+# --eject	attempt to eject CD or DVD media before rebooting
+reboot --eject

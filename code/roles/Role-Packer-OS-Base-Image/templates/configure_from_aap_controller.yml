@@ -1,0 +1,48 @@
+---
+
+- name: Call Job Templates or Workflows in Controller
+  hosts: localhost
+  connection: local
+  environment:
+    ANSIBLE_CALLBACKS_ENABLED: yaml
+
+  tasks:
+
+    - name: Build RHEL Server
+      when: template_build_osname == 'rhel7' or
+            template_build_osname == 'rhel8'
+      block:
+        - name: Launch a Workflow with extra_vars without waiting for RHEL Servers
+          ansible.controller.workflow_launch:
+            workflow_template: "Base-Image-Linux-Setup-WFJT"
+            wait: true
+            limit: {{ template_build_name }}
+          register: WFJT_Results
+
+    - name: Build Windows 2019 Server - Windows Update Only
+      when: template_build_osname == "windows2019" and
+            template_build_part == '1'
+      block:
+        - name: Launch a Workflow with extra_vars without waiting for Windows 2019 Servers (Part One)
+          ansible.controller.workflow_launch:
+            workflow_template: "Windows-2019-Base-Image-Part-One-WFJT"
+            wait: true
+            limit: {{ template_build_name }}
+          register: WFJT_Results
+
+    - name: Build Windows 2019 Server - Windows Setup for Final
+      when: template_build_osname == "windows2019" and
+            template_build_part == '2'
+      block:
+        - name: Launch a Workflow with extra_vars without waiting for Windows 2019 Servers (Part Two)
+          ansible.controller.workflow_launch:
+            workflow_template: "Windows-2019-Base-Image-Part-Two-WFJT"
+            wait: true
+            limit: {{ template_build_name }}
+          register: WFJT_Results
+
+    - name: Print Results of WFJT
+      debug:
+        var=WFJT_Results
+
+...

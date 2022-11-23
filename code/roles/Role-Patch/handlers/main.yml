@@ -1,0 +1,9 @@
+﻿---
+# handlers/main.yml - hold all the tasks handlers
+
+- name: Reboot Server
+  ansible.builtin.reboot:
+    reboot_timeout: 3600
+  listen: 'reboot server'
+
+...

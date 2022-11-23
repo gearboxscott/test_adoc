@@ -1,0 +1,148 @@
+# Mapped Variables
+
+variable "vsphere_server" {
+  type = string
+}
+
+variable "vsphere_user" {
+  type = string
+}
+
+variable "vsphere_password" {
+  type = string
+}
+
+variable "packer_admin_user" {
+  type = string
+}
+
+variable "packer_admin_password" {
+  type = string
+}
+
+variable "blob_sas_token" {
+  type = string
+}
+
+variable "qualys_activation_id" {
+  type = string
+}
+
+variable "qualys_customer_id" {
+  type = string
+}
+
+variable "rhel_register_activation_key" {
+  type = string
+}
+
+variable "rhel_register_organization_id" {
+  type = string
+}
+
+variable "controller_host" {
+  type = string
+}
+
+variable "controller_username" {
+  type = string
+}
+
+variable "controller_password" {
+  type = string
+}
+
+variable "controller_validate_certs" {
+  type = string
+}
+
+# Source
+
+source "{{ packer_os_builds[os_name].packer.provisioner_iso }}" "{{ packer_os_builds[os_name].packer.provisioner_source }}" {
+  vcenter_server = "${var.vsphere_server}"
+  username = "${var.vsphere_user}"
+  password = "${var.vsphere_password}"
+  insecure_connection = "true"
+  cluster = "${local.vsphere-cluster}"
+  datacenter = "${local.vsphere-datacenter}"
+  datastore = "${local.vsphere-datastore}"
+  folder = "${local.vsphere-folder}"
+  ssh_username = "${var.packer_admin_user}"
+  ssh_password = "${var.packer_admin_password}"
+  vm_name = "{{ vmware_template_information[survey_os_name].template_build_name }}"
+  notes = "{{ vmware_template_information[survey_os_name].template_build_description }}"
+  guest_os_type = "{{ packer_os_builds[os_name].packer.os_guest_type }}"
+  CPUs = "${local.vm-cpu-num}"
+  RAM = "${local.vm-mem-size}"
+  RAM_reserve_all = "{{ packer_os_builds[os_name].packer.ram_reserve_all | lower }}"
+  disk_controller_type = ["${local.disk-controller-type}"]
+  convert_to_template = "true"
+
+  storage {
+    disk_size = "${local.vm-disk-size}"
+    disk_thin_provisioned = "{{ packer_os_builds[os_name].packer.disk_thin_provisioned | lower }}"
+
+  }
+
+  network_adapters {
+    network = "${local.vsphere-network}"
+    network_card = "{{ packer_os_builds[os_name].packer.network_card }}"
+  }
+
+  boot_order = "disk,cdrom"
+  cd_label = "OEMDRV"
+  cd_files = [ "${local.ks_cfg}" ]
+  iso_paths = ["[${local.iso-path-storage}] ${local.iso-path}"]
+
+  boot_wait = "2s"
+  boot_command = [
+    "<up><esc><tab><wait5>",
+    "linux ks=hd:sr1:/${local.ks_cfg}",
+    "<enter><wait5>"
+  ]
+}
+
+build {
+  sources = ["${local.provisioner-sources}"]
+
+  provisioner "shell" {
+    inline = ["cat /etc/redhat-release"]
+  }
+
+  provisioner "ansible" {
+    playbook_file = "./configure_from_aap_controller.yml"
+    user = "pacman"
+    ansible_env_vars = [ "ANSIBLE_HOST_KEY_CHECKING=false", "ANSIBLE_FORCE_COLOR=false", "ANSIBLE_CALLBACKS_ENABLED=yaml" ]
+    extra_arguments = [ "--extra-vars",
+                        "controller_host=${var.controller_host}",
+                        "--extra-vars",
+                        "controller_username=${var.controller_username}",
+                        "--extra-vars",
+                        "controller_password=${var.controller_password}",
+                        "--extra-vars",
+                        "validate_certs=${var.controller_validate_certs}",
+                        "--extra-vars",
+                        "template_build_name={{ template_build_name }}",
+                        "--extra-vars",
+                        "template_build_osname={{ vmware_template_information[survey_os_name].os_name }}",
+                        "-vvv"
+    ]
+  }
+
+}
+
+locals {
+  vsphere-datacenter = "{{ packer_vsphere_datacenter }}"
+  vsphere-cluster = "{{ packer_vsphere_cluster }}"
+  vsphere-network = "{{ packer_vsphere_network }}"
+  vsphere-datastore = "{{ packer_vsphere_datastore }}"
+  vsphere-folder = "{{ packer_vsphere_folder }}"
+  vm-cpu-num = "{{ packer_os_builds[os_name].packer.vm_cpu_num }}"
+  vm-mem-size = "{{ packer_os_builds[os_name].packer.mem_size }}"
+  vm-disk-size = "{{ packer_os_builds[os_name].packer.disk_size }}"
+  iso-path-storage = "{{ packer_os_builds[os_name].packer.iso_path_storage }}"
+  iso-path = "{{ packer_os_builds[os_name].packer.iso_path }}"
+  ks_cfg = "{{ packer_os_builds[os_name].packer.ks_cfg }}"
+  disk-controller-type = "{{ packer_os_builds[os_name].packer.disk_controller_type }}"
+  provisioner-sources = "{{ packer_os_builds[os_name].packer.provisioner_sources }}"
+}

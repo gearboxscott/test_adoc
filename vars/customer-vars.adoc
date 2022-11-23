@@ -7,23 +7,26 @@
 :description: This document will describe how to use Ansible to call Packer to build a base image, then Packer will call Ansible to setup the rest of the image before converting it to a template.
 
 // This is where the customer name, customer, and short-name cust are inserted
-:customer: Reyes Holdings, L.L.C.
-:cust: Reyes
+:customer: Example Company
+:cust: Example
 
 // add name of customer logo here (store in images directory)
 // Leave it "empty" WITHOUT QUOTES if not there.
-:customerlogo: Reyes_Holdings_Logo.png
+:customerlogo: ''
 
 :custprojectmanager: Dianna Brown
 
 // these are required for the support chapter.
-:custgss: Reyes Holdings,L.L.C.
-:nogss: 1558218
+:custgss: Example Company
+:nogss: 1234567
 
 // --------------------------------
 // Other Vars
 // --------------------------------
 
-:automation_controller: sdatmctr.reyesholdings.com
-:automation_hub: sdatmhub.reyesholdings.com
-:vault_password_file: vault_password_file = ../.ansible-vault
+:automation_controller: automation-controller.example.com
+:automation_hub: automation-hub.example.com
+:vault_password_file: ''
+:git_org: example
+:vsphere_host: vsphere-server.example.com
+:namespace: example
